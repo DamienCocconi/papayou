@@ -80,6 +80,18 @@ On travaille en spec-driven :
 
 On ne code pas une fonctionnalité sans spec validée. Les petits correctifs évidents sont exemptés.
 
+### Branches git
+
+Avant la première écriture d'un travail (artefact OpenSpec, code, doc, config), quelle que soit la phase (explore, propose, apply, archive) :
+
+- **Vérifier la branche courante.** Sur `main`, on n'écrit jamais. Sur une autre branche, on vérifie qu'elle correspond bien au travail en cours (nom du change, sujet) : on a pu rester sur une ancienne branche de travail. En cas de doute, on demande.
+- **Par défaut, tirer une nouvelle branche depuis la dernière version de `main`** : `git fetch origin main` puis `git checkout -b <branche> origin/main`. Si le fetch échoue, on le signale et on part de la `main` locale.
+- **Si l'utilisateur le précise**, tirer la branche depuis une autre branche.
+- **Nommage** : `feat/<nom-du-change>` pour un change OpenSpec, `fix/<sujet>` pour un petit correctif hors spec, `chore/<sujet>` pour l'outillage et la config.
+- Si on est déjà sur la bonne branche, on la réutilise.
+
+Un hook (`.claude/hooks/block-main-writes.mjs`) bloque toute écriture dans le dépôt tant qu'on est sur `main`. Il ne détecte pas une mauvaise branche de travail : cette vérification reste à faire soi-même.
+
 ## Sous-agents
 
 Définis dans `.claude/agents/` :
