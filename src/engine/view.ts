@@ -1,5 +1,22 @@
 // Projection de l'état pour un joueur : sa main uniquement, jamais celles des autres.
-import type { GameState, PlayerView } from './types'
+import { sortHand } from './cards'
+import type { Card, GameState, PlayerView } from './types'
+
+/**
+ * Vue réservée aux bots : la vue du joueur plus les cartes déjà jouées dans la manche.
+ * Elle ne part jamais vers les humains, qui doivent se fier à leur mémoire.
+ */
+export interface BotView extends PlayerView {
+  /** Cartes déjà posées dans la manche (plis terminés et pli en cours), triées : l'ordre ne dit pas qui a gagné quoi. */
+  playedCards: Card[]
+}
+
+/** Vue d'un bot : `getPlayerView` + `playedCards`. Les cartes jouées ont été vues par toute la table ; le tri cache la composition des tas. */
+export function getBotView(state: GameState, seat: number): BotView {
+  const view = getPlayerView(state, seat)
+  const playedCards = sortHand([...state.won.flat(), ...state.trick.map((p) => p.card)])
+  return { ...view, playedCards }
+}
 
 /**
  * Vue du joueur `seat`. N'expose ni les autres mains, ni les cartes données par les autres

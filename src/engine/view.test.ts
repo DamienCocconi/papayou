@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { applyAction, createGame } from './game'
-import { getPlayerView } from './view'
+import { getBotView, getPlayerView } from './view'
 import { simulateGame } from './testing'
+import { sortHand } from './cards'
 import type { Card, GameState } from './types'
 
 /** Tous les identifiants de cartes qui apparaissent dans un objet JSON quelconque. */
@@ -85,5 +86,67 @@ describe('vue par joueur', () => {
 
   it('refuse une place invalide', () => {
     expect(() => getPlayerView(createGame(3, 1), 3)).toThrow(RangeError)
+  })
+})
+
+describe('vue pour les bots', () => {
+  it('a une liste de cartes jouées vide avant la première carte', () => {
+    const s = createGame(4, 8)
+    expect(getBotView(s, 0).playedCards).toEqual([])
+  })
+
+  it('liste chaque carte posée une seule fois, plis terminés compris, et aucune carte restée en main', () => {
+    for (const playerCount of [3, 4, 5, 6]) {
+      simulateGame(playerCount, 11, (state) => {
+        const view = getBotView(state, 0)
+        const played = view.playedCards.map((card) => card.id)
+        expect(new Set(played).size).toBe(played.length)
+        const inHands = new Set(state.hands.flat().map((card) => card.id))
+        for (const id of played) expect(inHands.has(id)).toBe(false)
+        // Cartes posées = toutes les cartes en jeu moins celles encore en main.
+        const total = 78 - state.removedCards.length
+        expect(played.length + inHands.size).toBe(total)
+      })
+    }
+  })
+
+  it('ne révèle ni les mains des autres ni leurs dons, à chaque étape de parties complètes', () => {
+    for (const playerCount of [3, 4, 5, 6]) {
+      simulateGame(playerCount, 21, (state) => {
+        for (let seat = 0; seat < playerCount; seat++) {
+          const view = getBotView(state, seat)
+          expect(view.hand).toEqual(state.hands[seat])
+          const allowed = new Set<string>(
+            [
+              ...view.hand,
+              ...(view.myGift ?? []),
+              ...view.playedCards,
+              ...view.myWon,
+              ...view.removedCards,
+              ...state.trick.map((p) => p.card),
+              ...(view.lastTrick?.plays.map((p) => p.card) ?? []),
+            ].map((card) => card.id),
+          )
+          const seen = cardIdsIn(view)
+          const others = [
+            ...state.hands.filter((_, i) => i !== seat).flat(),
+            ...state.gifts.filter((_, i) => i !== seat).flatMap((g) => g ?? []),
+          ]
+          for (const card of others) if (!allowed.has(card.id)) expect(seen.has(card.id)).toBe(false)
+        }
+      })
+    }
+  })
+
+  it("trie les cartes jouées : l'ordre ne révèle pas le contenu des tas", () => {
+    simulateGame(4, 5, (state) => {
+      const played = getBotView(state, 0).playedCards
+      expect(played.map((x) => x.id)).toEqual(sortHand(played).map((x) => x.id))
+    })
+  })
+
+  it("n'ajoute pas playedCards à la vue des joueurs humains", () => {
+    const s = createGame(3, 5)
+    expect('playedCards' in getPlayerView(s, 0)).toBe(false)
   })
 })

@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { applyAction } from './game'
-import { legalPlays, trickWinner } from './rules'
-import { c, playingState } from './testing'
+import { legalPlays, legalPlaysFromView, trickWinner } from './rules'
+import { createGame } from './game'
+import { c, playingState, simulateGame } from './testing'
+import { getPlayerView } from './view'
 import type { Card, GameState, Play } from './types'
 
 const ids = (cards: Card[]): string[] => cards.map((x) => x.id).sort()
@@ -217,5 +219,48 @@ describe('excuse : cas limites du dernier pli', () => {
     expect(s.lastTrick?.winner).toBe(1)
     expect(s.trickLeader).toBe(1)
     expect(s.won[1]?.map((x) => x.id)).toContain('excuse')
+  })
+})
+
+describe('coups légaux depuis une vue', () => {
+  it('donne les mêmes cartes que legalPlays à chaque étape de parties simulées (3 à 6 joueurs)', () => {
+    for (const playerCount of [3, 4, 5, 6]) {
+      for (const seed of [1, 2, 3]) {
+        simulateGame(playerCount, seed, (state) => {
+          for (let seat = 0; seat < playerCount; seat++) {
+            const fromView = legalPlaysFromView(getPlayerView(state, seat))
+            expect(ids(fromView)).toEqual(ids(legalPlays(state, seat)))
+          }
+        })
+      }
+    }
+  })
+
+  it("renvoie une liste vide quand ce n'est pas le tour du joueur", () => {
+    const s = playingState({ playerCount: 3, hands: [['H3'], ['H4'], ['H5']] })
+    expect(legalPlaysFromView(getPlayerView(s, 1))).toEqual([])
+  })
+
+  it('renvoie une liste vide hors de la phase de jeu', () => {
+    const s = simulateGame(3, 1, () => {})
+    expect(s.phase).toBe('gameEnd')
+    expect(legalPlaysFromView(getPlayerView(s, 0))).toEqual([])
+  })
+
+  it("renvoie une liste vide pendant l'échange et le choix du papayou", () => {
+    const s = createGame(3, 1)
+    expect(s.phase).toBe('exchange')
+    expect(legalPlaysFromView(getPlayerView(s, 0))).toEqual([])
+    expect(legalPlaysFromView(getPlayerView({ ...s, phase: 'choosePapayou' }, 0))).toEqual([])
+  })
+
+  it('applique les obligations de suivre depuis la vue', () => {
+    const s = playingState({
+      playerCount: 3,
+      hands: [['H3'], ['H4', 'D2', 'T5'], ['H5']],
+      trick: [{ seat: 0, card: 'H3' }],
+      trickLeader: 0,
+    })
+    expect(ids(legalPlaysFromView(getPlayerView(s, 1)))).toEqual(codes(['H4']))
   })
 })
