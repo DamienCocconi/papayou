@@ -1,6 +1,6 @@
 // Règles d'un pli : coups légaux et gagnant. Fonctions pures.
 import { isTrumpOrExcuse, trumpStrength } from './cards'
-import type { Card, GameState, Play } from './types'
+import type { Card, GameState, Play, PlayerView } from './types'
 
 /**
  * Cartes jouables avec la main `hand` quand `trick` contient les cartes déjà posées.
@@ -31,6 +31,13 @@ export function legalPlays(state: GameState, seat: number): Card[] {
   const hand = state.hands[seat]
   if (hand === undefined) return []
   return legalCards(hand, state.trick)
+}
+
+/** Mêmes coups légaux que `legalPlays`, calculés depuis la seule vue du joueur (sans l'état complet). */
+export function legalPlaysFromView(view: PlayerView): Card[] {
+  if (view.phase !== 'playing') return []
+  if ((view.trickLeader + view.trick.length) % view.playerCount !== view.seat) return []
+  return legalCards(view.hand, view.trick)
 }
 
 /** Joueur dont c'est le tour de poser une carte (null hors phase de jeu). */
