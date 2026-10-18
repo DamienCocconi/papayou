@@ -1,0 +1,9 @@
+// API publique du moteur : c'est tout ce que bots, net et ui ont le droit d'importer.
+export * from './types'
+export { EXCUSE, SUITS, cardPoints, createDeck, pilePoints, sortHand, suitCard, trumpCard } from './cards'
+export { applyAction, createGame, handSize, MAX_PLAYERS, MIN_PLAYERS, GIFT_SIZE } from './game'
+export { currentPlayer, legalPlays, trickWinner } from './rules'
+export { rankPlayers } from './scoring'
+export { getPlayerView } from './view'
+export { deserializeState, serializeState } from './serialization'
+export { createRng } from './rng'
