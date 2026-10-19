@@ -76,3 +76,17 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 .card.disabled { opacity: 0.4; filter: grayscale(0.6); }
 button.card:not(:disabled):hover { transform: translateY(-6px); }
 button.card.selected:hover { transform: translateY(-14px); }
+
+/* Réseau */
+.home h2 { font-size: 1.05rem; margin: 20px 0 0; color: var(--muted); }
+.home input { width: 100%; padding: 8px; font: inherit; }
+.home .network { margin-top: 24px; border-top: 1px solid var(--muted); }
+.home .btn.secondary { margin-top: 12px; }
+.code { font-size: 2.2rem; font-weight: 700; letter-spacing: 0.3em; text-align: center; margin: 12px 0; color: var(--accent); }
+.topbar-actions { display: flex; gap: 8px; }
+.banner { background: var(--excuse); color: #fff; padding: 8px 12px; border-radius: 8px; text-align: center; font-weight: 600; }
+.seat-list { list-style: none; padding: 0; margin: 0 0 12px; display: flex; flex-direction: column; gap: 8px; }
+.seat-list li { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.seat-list form { display: flex; gap: 6px; align-items: center; }
+.seat-list input { width: 160px; padding: 6px; font: inherit; }
+.panel.admin { max-width: 520px; margin: 0 auto; width: 100%; }

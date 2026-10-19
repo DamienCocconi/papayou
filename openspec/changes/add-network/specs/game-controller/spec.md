@@ -7,7 +7,7 @@ Le système SHALL fournir à l'interface, pour une partie en réseau, la même f
 
 #### Scenario: Action d'un invité
 - **WHEN** l'interface d'un invité envoie une action au contrôleur
-- **THEN** l'action part vers l'hôte et le contrôleur indique le résultat de la décision de l'hôte
+- **THEN** l'action part vers l'hôte, et si l'hôte la refuse, la cause est rapportée à l'interface avec l'instantané suivant
 
 #### Scenario: Notification d'une vue reçue
 - **WHEN** l'invité reçoit une nouvelle vue de l'hôte

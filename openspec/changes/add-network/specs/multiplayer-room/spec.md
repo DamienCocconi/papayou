@@ -113,6 +113,21 @@ Le système SHALL mettre la partie en pause tant qu'au moins une place n'est ten
 - **WHEN** la dernière place libre est reprise par un joueur ou remplacée par un bot
 - **THEN** la pause prend fin et la partie reprend où elle s'était arrêtée
 
+### Requirement: Détection d'une connexion silencieuse
+Le système SHALL considérer comme déconnecté un invité dont l'hôte n'a plus aucune nouvelle depuis 15 secondes (réseau coupé, écran verrouillé), même si sa connexion technique reste ouverte, et SHALL le traiter comme une déconnexion (place libre, pause). Réciproquement, un invité qui n'entend plus l'hôte depuis 15 secondes SHALL le signaler comme connexion perdue. Les invités se manifestent par un message de vie envoyé toutes les 5 secondes.
+
+#### Scenario: Joueur muet
+- **WHEN** un invité n'envoie plus rien pendant plus de 15 secondes alors que sa connexion reste ouverte
+- **THEN** sa place est libérée avec son dernier nom, la partie est en pause et tous les joueurs le voient
+
+#### Scenario: Salle occupée par un invité fantôme
+- **WHEN** un invité muet occupait une place et qu'il est détecté absent
+- **THEN** un arrivant peut prendre cette place alors qu'auparavant toutes les places semblaient tenues
+
+#### Scenario: Hôte muet
+- **WHEN** un invité ne reçoit plus aucun message de l'hôte pendant plus de 15 secondes
+- **THEN** il voit que la connexion est perdue et peut revenir à l'accueil
+
 ### Requirement: Rejoindre une partie en cours par les places
 Le système SHALL montrer à toute personne qui ouvre le lien d'une partie en cours la liste des places : le nom du joueur connecté, « bot » pour une place tenue par un bot, « libre » pour une place libre avec le nom de son précédent occupant. La personne SHALL pouvoir prendre une place libre ou une place de bot, sous le nom de son choix, mais pas la place d'un joueur connecté.
 

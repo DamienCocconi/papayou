@@ -43,6 +43,13 @@ Le système SHALL afficher, à qui rejoint une partie en cours, la liste des pla
 - **WHEN** une place est tenue par un joueur connecté
 - **THEN** elle est affichée sans bouton pour la prendre
 
+### Requirement: Aucune place disponible
+Le système SHALL, quand toutes les places d'une partie en cours sont tenues par des joueurs connectés, l'indiquer sur l'écran des places en expliquant que l'hôte peut renvoyer un joueur absent, et SHALL mettre la liste à jour toute seule.
+
+#### Scenario: Toutes les places sont tenues
+- **WHEN** un arrivant ouvre le lien et qu'aucune place n'est libre ni tenue par un bot
+- **THEN** l'écran dit qu'aucune place n'est disponible et pointe vers le menu d'administration de l'hôte
+
 ### Requirement: Indication de pause
 Le système SHALL afficher à tous les joueurs, hôte compris, un bandeau de pause qui nomme la ou les places libres tant que la partie est interrompue, et SHALL empêcher de jouer pendant ce temps.
 

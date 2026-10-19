@@ -51,7 +51,9 @@ Le second but compte autant que le premier. Il vaut mieux un workflow propre et 
 3. **Interface React locale** (inversée avec le réseau, décision prise en explorant l'UI) : parties contre des bots sur un seul écran. L'UI ne consomme qu'une `PlayerView` et émet des `Action` via un `GameController` ; le réseau pourra donc s'y brancher sans toucher aux composants. Deux changements :
    - `add-ui-table` : contrôleur local, table, main, échange, choix du papayou, tour complet contre bots, PC d'abord. Cartes en CSS pur (symboles Unicode, lettres V/C/D/R), interaction par clic. Tests Vitest sur le contrôleur seulement.
    - `add-ui-scores-mobile` : tableau des scores, fin de partie, adaptation mobile.
-4. **Réseau** : salle PeerJS, vue par joueur, sauvegarde et reprise, en implémentant le même `GameController`.
+4. **Réseau**, en implémentant le même `GameController` :
+   - `add-network` : salle PeerJS avec code et lien, lobby, vue entière par joueur et versionnée, bots sur l'hôte, pause et reprise de place quand un joueur part, administration par l'hôte, fin de manche avec chronomètre.
+   - changement suivant : sauvegarde dans `localStorage` et reprise de la partie après la perte de l'hôte.
 5. **Finitions** : PWA, Wake Lock, ergonomie tactile, glisser-déposer, assets graphiques des cartes (figures roi, dame, cavalier, valet dessinées sur mesure, dans un changement dédié).
 
 Chaque étape fait l'objet d'un changement OpenSpec distinct.

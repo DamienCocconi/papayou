@@ -75,7 +75,7 @@ export function createLocalGame(options: LocalGameOptions): GameController {
 
   function buildSnapshot(): ControllerSnapshot {
     const view = getPlayerView(state, HUMAN_SEAT)
-    return { view, legalPlays: legalPlaysFromView(view), botsPending: botsPending() }
+    return { view, legalPlays: legalPlaysFromView(view), botsPending: botsPending(), session: null }
   }
 
   let snapshot = buildSnapshot()

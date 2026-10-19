@@ -79,6 +79,7 @@ Invité -> Hôte                         Hôte -> Invité
   claim     { seat, name }               seats    { seats }            (partie en cours : écran des places)
   action    { action }                   state    { version, view, session }
   nextRound {}                           error    { code }             (à l'invité concerné)
+  ping      {}                           pong     {}
                                          closed   { reason }           (renvoi, fin de salle)
   admin (hôte uniquement, local) :
     kick(seat), replaceWithBot(seat), start(botCount, botKind)
@@ -92,7 +93,7 @@ Invité -> Hôte                         Hôte -> Invité
 
 La pause est un état dérivé : « au moins une place libre ». Tant qu'elle dure, `session-host` refuse les actions de jeu et ne planifie aucun bot. Quand une place est reprise, remplacée ou prise, la pause est réévaluée, la planification des bots est annulée puis relancée (un bot qui avait un coup planifié ne joue plus si sa place est devenue humaine), et la vue est rediffusée.
 
-- Détection d'une déconnexion : l'événement de fermeture de la connexion PeerJS. Il peut arriver avec retard (téléphone verrouillé, réseau coupé) ; c'est précisément le cas couvert par « Renvoyer le joueur » quand la connexion reste ouverte mais que le joueur est absent.
+- Détection d'une déconnexion : l'événement de fermeture de la connexion PeerJS **et** un battement de cœur applicatif. Premier essai réel (téléphone) : WebRTC n'a jamais signalé la perte d'un téléphone, la place restait « tenue » et bloquait les autres. Chaque invité envoie donc `ping` toutes les 5 s, l'hôte répond `pong`, et chaque côté déclare l'autre perdu après 15 s de silence (tout message reçu compte). « Renvoyer le joueur » reste utile pour un joueur absent dont l'appareil, lui, répond encore.
 
 ### 8. Fin de manche : l'hôte tient le chronomètre
 
@@ -114,7 +115,7 @@ Un petit objet `{ host, port, path, secure }` optionnel, lu depuis une variable 
 
 - [Le serveur public de PeerJS n'offre aucune garantie] → Une panne n'empêche que la création ou la jonction ; la configuration du serveur permet de basculer sans refonte.
 - [Wifi qui isole les clients, réseaux d'entreprise : le pair à pair direct peut échouer] → Hors périmètre, déjà noté dans `docs/contexte.md` ; le message d'erreur de connexion doit être explicite.
-- [Détection tardive d'une déconnexion] → « Renvoyer le joueur » contourne le cas ; pas de battement de cœur applicatif dans cette version.
+- [Détection tardive d'une déconnexion] → Battement de cœur applicatif (Décision 7) : au plus ~15 s de retard ; un onglet en arrière-plan dont les minuteries sont ralenties peut être déclaré absent à tort, ce qui est acceptable (il reprend sa place en rouvrant le lien).
 - [L'hôte voit techniquement toutes les mains via les outils de développement] → Accepté (voir `docs/contexte.md`) ; les invités ne reçoivent que leur vue.
 - [Hôte en arrière-plan sur mobile : minuteries ralenties, partie qui se fige] → Le Wake Lock est prévu dans les finitions ; en attendant, l'hôte doit laisser l'écran allumé.
 - [Prise de place disputée] → Le JavaScript de l'hôte traite les messages un par un : le premier arrivé gagne, l'autre reçoit un refus et la liste à jour.
