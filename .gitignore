@@ -21,3 +21,6 @@ npm-debug.log*
 
 # Claude Code : réglages locaux personnels
 .claude/settings.local.json
+
+# Graphe de connaissances graphify (généré)
+graphify-out/
