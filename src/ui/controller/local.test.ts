@@ -94,6 +94,11 @@ describe('création', () => {
     expect(game.getSnapshot()).toBe(game.getSnapshot())
   })
 
+  it('ne porte aucune information de réseau : ni pause, ni place libre, ni compte à rebours', () => {
+    const { game } = newGame(4)
+    expect(game.getSnapshot().session).toBeNull()
+  })
+
   it('ne fournit que la main de l\'humain', () => {
     const { game } = newGame(4)
     const json = JSON.stringify(game.getSnapshot())

@@ -3,7 +3,7 @@ import { playerName, turnSeat } from '../labels'
 import { CardView } from './CardView'
 
 /** Les joueurs avec leur carte du pli en cours, leur nombre de cartes et le tour. */
-export function Table({ view }: { view: PlayerView }) {
+export function Table({ view, names }: { view: PlayerView; names?: readonly string[] | null }) {
   const turn = turnSeat(view)
   const seats = Array.from({ length: view.playerCount }, (_, seat) => seat)
   return (
@@ -12,7 +12,7 @@ export function Table({ view }: { view: PlayerView }) {
         const play = view.trick.find((p) => p.seat === seat)
         return (
           <div key={seat} className={`seat${turn === seat ? ' turn' : ''}`}>
-            <div className="name">{playerName(seat, view.seat)}</div>
+            <div className="name">{playerName(seat, view.seat, names)}</div>
             <div className="meta">
               {view.handSizes[seat]} cartes
               {view.roundLeader === seat ? ' · entameur' : ''}
