@@ -33,6 +33,7 @@ Le second but compte autant que le premier. Il vaut mieux un workflow propre et 
 | **React + Vite + Vitest** | React pour l'apprentissage et la future mission. Vite est l'outil de build standard. Vitest est l'équivalent de JUnit et partage la config de Vite. |
 | **Pas de moteur de jeu** (Phaser, Unity...) | Des cartes sur une table se font en HTML, CSS et React, glisser-déposer tactile compris. |
 | **Java écarté** pour ce projet | Aurait imposé un backend et un moteur dupliqué. Reste possible si le but devenait l'entraînement Java, mais ce n'est pas le cas ici. |
+| Hébergement sur **GitHub Pages** (`https://damiencocconi.github.io/papayou/`), déploiement automatique depuis `main` | Site statique, dépôt déjà sur GitHub, gratuit, HTTPS (requis pour le presse-papier, Wake Lock, PWA). Plus besoin de `npm run dev` pour jouer. La signalisation PeerJS publique est conservée. Change `add-hosting`. |
 | **OpenSpec** pour les specs | Déjà utilisé au travail : un seul outil à apprendre. |
 | **Peu de sous-agents**, bien ciblés | Architecte, développeur moteur, développeur frontend, relecteur QA. Éviter un zoo d'agents au début. L'agent principal orchestre. |
 
@@ -41,6 +42,7 @@ Le second but compte autant que le premier. Il vaut mieux un workflow propre et 
 - **Hôte fragile** : si l'hôte ferme son onglet ou verrouille son téléphone, la partie est interrompue. Prévoir tôt la sauvegarde de l'état dans `localStorage` à chaque coup et la reconnexion avec le même code de salle.
 - **Veille de l'écran** sur mobile : utiliser l'API Wake Lock pendant la partie.
 - **Réseaux wifi avec isolation des clients** (invités, publics) : le WebRTC direct peut échouer. Solution de repli prévue plus tard : un petit relais Node, sans toucher au moteur.
+  - **Réseau d'entreprise** : UDP sortant filtré, port 3478 (TURN de PeerJS) bloqué ou mDNS filtré peuvent empêcher la connexion. Joueurs attendus : chacun sur son smartphone, en 4G/5G ou sur le wifi corporate. **À faire : tester le site publié sur ce réseau** (hôte en 4G/5G, invité sur le wifi corporate, puis les deux sur le wifi). Si cela échoue, changement séparé `add-turn-config` : `iceServers` configurable avec un TURN en TLS/443 ; en dernier recours, le relais Node. Conseil en attendant : prendre l'hôte en 4G/5G.
 - **L'hôte voit techniquement toutes les mains** via les outils de développement du navigateur. Accepté pour un usage entre amis. Les non-hôtes ne reçoivent que leur propre vue.
 - **Cas limites de l'excuse** : principale source d'erreurs. Un test dédié par cas.
 

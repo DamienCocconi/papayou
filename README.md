@@ -2,7 +2,17 @@
 
 Jeu de cartes inspiré du tarot, jouable dans un navigateur (PC et mobile), de 3 à 6 joueurs. Usage prévu : une table, chacun sur son téléphone.
 
-**État du projet :** seul le moteur de règles (`src/engine/`) est écrit et testé. L'interface, les bots et le réseau viennent dans des changements séparés. `npm run dev` n'affiche donc pour l'instant qu'un titre.
+## Jouer en ligne
+
+Le jeu est publié sur **https://damiencocconi.github.io/papayou/** : rien à installer ni à lancer. L'hôte ouvre l'adresse, crée une salle et partage le lien ou le code ; les invités ouvrent le lien (ou saisissent le code) sur leur téléphone ou leur PC.
+
+**Si la connexion entre appareils échoue.** Les appareils se connectent directement entre eux (WebRTC) ; certains réseaux l'empêchent, surtout les wifi invités ou d'entreprise. Le plus sûr est de prendre comme **hôte** un appareil en **4G/5G**. Un invité dont le wifi bloque peut aussi passer en 4G/5G.
+
+### Déploiement
+
+Le site se republie tout seul à chaque fusion sur `main` ([`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)) : installation, tests, build, puis publication sur GitHub Pages. Un test en échec empêche la publication et la version précédente reste en ligne. On peut aussi relancer la publication à la main (onglet Actions > « Déploiement GitHub Pages » > Run workflow).
+
+Réglage à faire une seule fois dans le dépôt GitHub : **Settings > Pages > Source = « GitHub Actions »**.
 
 Les règles du jeu font foi dans [`docs/regles-papayou.md`](docs/regles-papayou.md). Les conventions et l'architecture sont dans [`CLAUDE.md`](CLAUDE.md).
 
@@ -97,8 +107,8 @@ const restored = deserializeState(text)  // la partie reprend à l'identique
 ```
 src/
   engine/   Moteur de règles pur (aucune dépendance externe)
-  bots/     Joueurs automatiques (à venir)
-  net/      Réseau PeerJS : salle, messages, reconnexion (à venir)
+  bots/     Joueurs automatiques
+  net/      Réseau PeerJS : salle, messages, reconnexion
   ui/       Composants React
 docs/       Règles du jeu et notes de conception
 openspec/   Specs de référence (specs/) et changements (changes/)
@@ -108,7 +118,7 @@ Règle de dépendance : `engine` n'importe rien d'autre que lui-même ; `bots` e
 
 ## Stack
 
-TypeScript (mode strict), React 18, Vite 6, Vitest 3. Multijoueur prévu avec PeerJS (WebRTC), sans backend. Navigateurs récents uniquement (Chrome, Firefox, Edge, Opera, Safari).
+TypeScript (mode strict), React 18, Vite 6, Vitest 3. Multijoueur avec PeerJS (WebRTC), sans backend. Navigateurs récents uniquement (Chrome, Firefox, Edge, Opera, Safari).
 
 ## Workflow (OpenSpec)
 
