@@ -8,6 +8,39 @@ Le jeu est publié sur **https://damiencocconi.github.io/papayou/** : rien à in
 
 **Si la connexion entre appareils échoue.** Les appareils se connectent directement entre eux (WebRTC) ; certains réseaux l'empêchent, surtout les wifi invités ou d'entreprise. Le plus sûr est de prendre comme **hôte** un appareil en **4G/5G**. Un invité dont le wifi bloque peut aussi passer en 4G/5G.
 
+### Comment un joueur en rejoint un autre, avec la même adresse pour tous
+
+L'adresse du site est la même pour tout le monde, et pourtant chacun arrive dans **la bonne partie**. C'est que GitHub Pages ne fait que servir les fichiers du site : il ne connaît ni les salles ni les joueurs. Tout le reste se passe dans les navigateurs.
+
+```
+   GitHub Pages                       Serveur de signalisation PeerJS
+   (fichiers du site,                 (annuaire public : « qui est
+    identiques pour tous)              papayou-U5CXJ ? »)
+        ^   ^                               ^              ^
+        |   | on charge la page            | 1. s'inscrit | 3. demande à joindre
+        |   | (hôte et invités)             |              |    papayou-U5CXJ
+        |   |                               |              |
+   +----+---+------------+                  |              |
+   |  Téléphone de       |------------------+              |
+   |  l'hôte             |                                 |
+   |  (moteur du jeu)    |<=== 4. canal direct WebRTC ====>+---- Téléphone d'un invité
+   +---------------------+      (cartes, plis, scores)          (affichage de sa main)
+```
+
+1. **L'hôte crée une salle.** Son navigateur tire un code de 5 caractères (`U5CXJ`, sans `0/O` ni `1/I` pour se dicter sans erreur) et s'inscrit sur le serveur de signalisation PeerJS sous l'identifiant `papayou-U5CXJ`. Si cet identifiant est déjà pris, un autre code est tiré. Le code identifie donc le navigateur de l'hôte, pas une machine du site.
+2. **Le lien d'invitation est l'adresse du site suivie du code**, après un `#` : `https://damiencocconi.github.io/papayou/#/rejoindre/U5CXJ`. Le début est le même pour tous ; seul le code distingue les salles. Ce qui suit le `#` n'est **jamais envoyé** à un serveur : la page le lit elle-même. On peut aussi ne partager que l'adresse du site et le code, que l'invité saisit à la main.
+3. **L'invité charge la même page**, lit le code, et demande au serveur de signalisation de le mettre en relation avec `papayou-U5CXJ`. Si personne n'est inscrit sous cet identifiant, il voit « salle introuvable ».
+4. **Le serveur de signalisation fait passer la poignée de main** : les deux navigateurs s'échangent leurs adresses réseau (via un serveur STUN, qui permet de découvrir son adresse publique) et ouvrent un **canal WebRTC direct**. Quand la connexion directe est impossible (NAT strict, par exemple), PeerJS passe par un relais TURN public.
+5. **Ensuite, les messages circulent directement entre les téléphones.** Le serveur de signalisation ne sert plus qu'à faire entrer de nouveaux joueurs ; s'il tombe, la partie en cours continue.
+
+Conséquences utiles à connaître :
+
+- **Le moteur de règles tourne chez l'hôte**, et chez lui seulement. Les invités envoient leurs actions, l'hôte les valide, puis renvoie à chacun **sa propre vue** (sa main, le nombre de cartes des autres), jamais l'état complet.
+- **Si l'hôte ferme son onglet ou verrouille son téléphone**, la partie s'arrête : il n'y a pas de serveur de jeu pour la reprendre.
+- **Plusieurs parties peuvent coexister** sur le même site sans se gêner, puisque chaque salle a son propre code. Les identifiants sont préfixés par `papayou-` parce que le serveur de signalisation public est partagé avec d'autres applications.
+- **Rien n'est stocké sur GitHub Pages** : pas de compte, pas de base de données, pas de journal des parties.
+- Pour utiliser son propre serveur de signalisation, on renseigne `VITE_PEER_HOST`, `VITE_PEER_PORT`, `VITE_PEER_PATH` et `VITE_PEER_SECURE` à la compilation (voir [`src/net/config.ts`](src/net/config.ts)). Le code du transport est dans [`src/net/peer-transport.ts`](src/net/peer-transport.ts).
+
 ### Déploiement
 
 Le site se republie tout seul à chaque fusion sur `main` ([`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)) : installation, tests, build, puis publication sur GitHub Pages. Un test en échec empêche la publication et la version précédente reste en ligne. On peut aussi relancer la publication à la main (onglet Actions > « Déploiement GitHub Pages » > Run workflow).
