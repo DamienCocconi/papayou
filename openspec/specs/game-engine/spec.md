@@ -99,50 +99,23 @@ Le système SHALL permettre d'entamer un pli avec n'importe quelle carte, atout 
 - **WHEN** le joueur qui entame le dernier pli n'a plus que l'excuse
 - **THEN** il doit l'entamer et l'action est acceptée
 
-### Requirement: Obligations pour suivre
-Le système SHALL imposer aux joueurs suivants : si la carte d'entame est une carte de couleur, fournir de cette couleur s'ils en ont ; sinon jouer un atout s'ils en ont ; sinon jouer n'importe quelle carte. Si la carte d'entame est un atout, jouer un atout s'ils en ont, sinon n'importe quelle carte. L'excuse SHALL compter comme un atout pour ces obligations. Le système SHALL NOT imposer de surcouper.
-
-#### Scenario: Obligation de fournir la couleur
-- **WHEN** un joueur a de la couleur demandée
-- **THEN** seules les cartes de cette couleur sont jouables, l'excuse et les atouts ne le sont pas
-
-#### Scenario: Obligation de couper
-- **WHEN** un joueur n'a plus de la couleur demandée mais a un atout
-- **THEN** seuls ses atouts, excuse comprise, sont jouables
-
-#### Scenario: Défausse libre
-- **WHEN** un joueur n'a ni la couleur demandée ni atout
-- **THEN** toutes ses cartes sont jouables
-
-#### Scenario: Atout demandé
-- **WHEN** un atout est demandé et que le joueur a des atouts
-- **THEN** seuls ses atouts, excuse comprise, sont jouables
-
-#### Scenario: Excuse seul atout en main
-- **WHEN** un atout est demandé et que l'excuse est le seul atout du joueur
-- **THEN** l'excuse est la seule carte jouable
-
-#### Scenario: Pas d'obligation de surcouper
-- **WHEN** un atout fort est déjà posé et que le joueur a un atout plus faible
-- **THEN** il peut jouer cet atout plus faible
-
 ### Requirement: Gagnant d'un pli
-Le système SHALL désigner comme gagnant d'un pli complet, comportant une carte par joueur, le joueur qui a posé le plus fort atout si au moins un atout a été posé, l'excuse comptant pour un atout de force 0, sinon le joueur qui a posé la plus haute carte de la couleur demandée. Les cartes d'une autre couleur ne gagnent jamais.
+Le système SHALL désigner comme gagnant d'un pli complet, comportant une carte par joueur, le joueur qui a posé la plus forte carte de la famille demandée par l'entame : la plus haute carte de la couleur demandée si l'entame est une carte de couleur, le plus fort atout si l'entame est un atout, l'excuse comptant pour un atout de force 0. Les cartes d'une autre famille, atouts compris quand une couleur est demandée, ne gagnent jamais.
 
 #### Scenario: Pli sans atout
 - **WHEN** aucun atout n'est posé
 - **THEN** la plus haute carte de la couleur demandée gagne
 
 #### Scenario: Coupe
-- **WHEN** un atout est posé sur une couleur
-- **THEN** le plus fort atout gagne, même contre un roi de la couleur demandée
+- **WHEN** un joueur sans la couleur demandée pose un atout sur un pli entamé à la couleur
+- **THEN** l'atout ne gagne pas : la plus haute carte de la couleur demandée garde le pli, même contre l'atout 21
 
 #### Scenario: Excuse seul atout du pli
-- **WHEN** l'excuse est le seul atout du pli et qu'elle n'a pas entamé
-- **THEN** son joueur gagne le pli et récupère ses 100 points
+- **WHEN** l'excuse est le seul atout du pli, posée sans entamer sur un pli de couleur
+- **THEN** elle ne gagne pas, le gagnant du pli est celui qui a posé la plus haute carte de la couleur demandée, et il récupère les 100 points de l'excuse
 
 #### Scenario: Excuse battue
-- **WHEN** l'excuse et un autre atout sont posés
+- **WHEN** l'excuse et un autre atout sont posés sur un pli d'atout
 - **THEN** l'autre atout gagne, même s'il est de valeur 1
 
 #### Scenario: Excuse en entame au dernier pli
@@ -151,7 +124,7 @@ Le système SHALL désigner comme gagnant d'un pli complet, comportant une carte
 
 #### Scenario: Excuse jouée sans entamer au dernier pli
 - **WHEN** l'excuse est jouée au dernier pli sans entamer
-- **THEN** la règle normale s'applique : elle ne gagne que si elle est le seul atout du pli
+- **THEN** la règle normale s'applique : elle ne gagne pas, quelle que soit la famille demandée
 
 ### Requirement: Déroulement des plis
 Le système SHALL faire jouer les joueurs dans le sens horaire à partir de l'entameur, ajouter les cartes du pli au tas de son gagnant, faire entamer le pli suivant par ce gagnant, et continuer jusqu'à épuisement des mains, soit autant de plis que de cartes par joueur.
@@ -240,3 +213,34 @@ Le système SHALL fournir pour un bot une vue qui contient la vue du joueur et l
 #### Scenario: Vue des humains inchangée
 - **WHEN** on demande la vue d'un joueur humain
 - **THEN** elle ne contient pas la liste des cartes déjà jouées
+
+### Requirement: Obligations de suivi
+Le système SHALL imposer aux joueurs suivants : si la carte d'entame est une carte de couleur, fournir de cette couleur s'ils en ont, sinon jouer n'importe quelle carte (atouts et excuse compris) ; si la carte d'entame est un atout, jouer un atout s'ils en ont, sinon n'importe quelle carte. L'excuse SHALL compter comme un atout pour l'obligation de fournir à l'atout. Le système SHALL NOT imposer de couper ni de surcouper.
+
+#### Scenario: Obligation de fournir la couleur
+- **WHEN** un joueur a de la couleur demandée
+- **THEN** seules les cartes de cette couleur sont jouables, l'excuse et les atouts ne le sont pas
+
+#### Scenario: Défausse libre avec des atouts en main
+- **WHEN** un joueur n'a plus de la couleur demandée mais a des atouts ou l'excuse
+- **THEN** toutes ses cartes sont jouables, il n'est pas obligé de jouer atout
+
+#### Scenario: Défausse libre sans atout
+- **WHEN** un joueur n'a ni la couleur demandée ni atout
+- **THEN** toutes ses cartes sont jouables
+
+#### Scenario: Atout demandé
+- **WHEN** un atout est demandé et que le joueur a des atouts
+- **THEN** seuls ses atouts, excuse comprise, sont jouables
+
+#### Scenario: Atout demandé sans atout en main
+- **WHEN** un atout est demandé et que le joueur n'a ni atout ni excuse
+- **THEN** toutes ses cartes sont jouables
+
+#### Scenario: Excuse seul atout en main
+- **WHEN** un atout est demandé et que l'excuse est le seul atout du joueur
+- **THEN** l'excuse est la seule carte jouable
+
+#### Scenario: Pas d'obligation de surcouper
+- **WHEN** un atout fort est déjà posé sur un pli d'atout et que le joueur a un atout plus faible
+- **THEN** il peut jouer cet atout plus faible
