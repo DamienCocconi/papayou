@@ -75,24 +75,25 @@ Un pli comporte **une carte par joueur**.
 Soit C la couleur de la carte d'entame.
 
 1. Si C est une couleur : on **doit fournir** de cette couleur si on en a. L'excuse ne peut pas être jouée à la place.
-2. Si on n'a plus de cette couleur : on **doit jouer un atout** si on en a (l'excuse compte comme un atout et peut donc être jouée ici).
-3. Si on n'a ni la couleur ni atout : on joue **n'importe quelle carte**.
-4. Si C est atout : on **doit jouer un atout** si on en a (excuse comprise). Sinon, n'importe quelle carte.
+2. Si on n'a plus de cette couleur : on joue **n'importe quelle carte** (atout, excuse ou carte de couleur). On n'est pas obligé de couper.
+3. Si C est atout : on **doit jouer un atout** si on en a (l'excuse en est un). Sinon, n'importe quelle carte.
 
-**Il n'y a pas d'obligation de surcouper.** Un joueur peut jouer un petit atout même si un atout plus fort est déjà posé (stratégie « sécurité »), ou un gros atout (stratégie « charger le pli »).
+L'atout est une **cinquième couleur** qui rapporte des points : il ne remporte un pli que si un atout a été entamé. Un atout posé sur une couleur ne gagne jamais, mais ses points vont au gagnant du pli.
+
+**Il n'y a pas d'obligation de surcouper.** Sur un pli d'atout, un joueur peut jouer un petit atout même si un atout plus fort est déjà posé (stratégie « sécurité »), ou un gros atout (stratégie « charger le pli »).
 
 **Excuse seul atout en main :** si un atout est demandé et que l'excuse est le seul atout du joueur, il est obligé de la jouer.
 
-**Résumé pour l'excuse :** elle n'est jouable que quand un atout est jouable, c'est-à-dire si l'atout est demandé ou si on n'a plus la couleur demandée. Elle ne peut jamais entamer, sauf dans le cas du dernier pli ci-dessus.
+**Résumé pour l'excuse :** elle est interdite en entame (sauf au dernier pli, voir ci-dessous). Elle est jouable librement quand on n'a plus la couleur demandée, et obligatoire si un atout est demandé et qu'elle est notre seul atout. Elle ne gagne jamais un pli, sauf par l'entame forcée du dernier pli.
 
 ### Gagnant du pli
 
-1. Si au moins un atout a été joué (l'excuse en est un, de force 0) : le **plus gros atout** l'emporte.
-2. Sinon : la **plus haute carte de la couleur demandée** l'emporte. Les cartes d'une autre couleur ne gagnent jamais.
+1. Si le pli a été entamé à l'**atout** : le **plus gros atout** l'emporte (l'excuse vaut 0, elle perd donc contre tout autre atout). Les cartes de couleur défaussées ne gagnent jamais.
+2. Si le pli a été entamé à une **couleur** : la **plus haute carte de cette couleur** l'emporte. Les atouts et l'excuse posés sur ce pli ne gagnent jamais.
 
-Pour désigner le gagnant, l'excuse vaut 0. Pour le décompte, elle vaut **100 points**. Si elle est le seul atout du pli, son joueur remporte le pli et les 100 points avec.
+Pour désigner le gagnant, l'excuse vaut 0. Pour le décompte, elle vaut **100 points** : elle va au gagnant du pli, comme toute autre carte.
 
-**Dernier pli :** la victoire automatique ne s'applique que si l'excuse **entame** le pli (le joueur n'a pas eu le choix). Si l'excuse est jouée sans entamer, elle suit la règle normale : elle perd contre tout autre atout, et ne gagne que si c'est le seul atout du pli.
+**Dernier pli :** la victoire automatique ne s'applique que si l'excuse **entame** le pli (le joueur n'a pas eu le choix, c'est sa dernière carte). Si l'excuse est jouée sans entamer, elle suit la règle normale : elle ne gagne pas.
 
 ## 6. Exemples de plis
 
@@ -100,19 +101,19 @@ Papayou : 7 de cœur. 4 joueurs, A entame.
 
 **Exemple 1 : la couleur gagne.**
 A : roi de pique, B : 3 de pique, C : dame de pique, D : 10 de pique.
-Aucun atout, le roi de pique est le plus haut de la couleur demandée. A gagne, le pli vaut 0 point.
+Le roi de pique est le plus haut de la couleur demandée. A gagne, le pli vaut 0 point.
 
-**Exemple 2 : la coupe.**
+**Exemple 2 : l'atout posé sur une couleur ne gagne pas.**
 A : 7 de cœur (papayou), B : 2 de cœur, C : atout 8 (plus de cœur), D : roi de cœur.
-Un atout a été joué, C gagne. Le pli vaut 50 + 8 = 58 points pour C.
+C n'a plus de cœur, il joue l'atout 8 pour s'en débarrasser, mais l'atout ne coupe pas. D gagne avec le roi de cœur. Le pli vaut 50 + 8 = 58 points pour D.
 
-**Exemple 3 : l'excuse comme atout.**
-A : 5 de trèfle, B : atout 14 (plus de trèfle), C : excuse (plus de trèfle, mais atouts disponibles), D : 9 de trèfle.
-B gagne avec l'atout 14, l'excuse perd. Le pli vaut 14 + 100 = 114 points pour B : l'excuse a été « donnée » à B.
+**Exemple 3 : l'excuse perd sur un pli d'atout.**
+A : atout 5, B : excuse, C : 9 de trèfle (plus d'atout), D : atout 1.
+Le pli est entamé à l'atout, le plus gros atout gagne : A l'emporte avec l'atout 5. Le pli vaut 5 + 100 + 1 = 106 points pour A : l'excuse lui a été « donnée ».
 
-**Exemple 4 : l'excuse qui se retourne contre son joueur.**
+**Exemple 4 : l'excuse défaussée sur une couleur.**
 A : 5 de trèfle, B : 2 de trèfle, C : excuse (plus de trèfle), D : 9 de trèfle.
-C est le seul à avoir joué un atout, il gagne le pli et récupère 100 points.
+C se débarrasse de l'excuse sans risque : elle ne gagne pas. D gagne avec le 9 de trèfle et récupère les 100 points.
 
 **Exemple 5 : dernier pli avec excuse en entame.**
 Dernier pli, A n'a plus que l'excuse. Il l'entame et remporte automatiquement le pli, y compris des atouts élevés posés par les autres.
@@ -128,7 +129,8 @@ Dernier pli, A n'a plus que l'excuse. Il l'entame et remporte automatiquement le
 ## 8. Décisions validées
 
 1. **Tirage des « 1 » retirés** (4 et 5 joueurs) : une seule fois en début de partie.
-2. **Excuse seul atout en main quand l'atout est demandé** : obligation de la jouer. Au dernier pli, elle ne gagne automatiquement que si elle entame ; sinon elle gagne uniquement si c'est le seul atout du pli.
+2. **Excuse seul atout en main quand l'atout est demandé** : obligation de la jouer. Au dernier pli, elle ne gagne automatiquement que si elle entame ; sinon elle ne gagne pas.
 3. **Sens de l'échange et de l'ordre de jeu** : toujours le sens horaire (ordre dans un pli, don des 3 cartes, premier joueur de chaque manche).
+4. **L'atout est une cinquième couleur** : sans la couleur demandée, on joue n'importe quelle carte (pas d'obligation de couper). Un atout posé sur une couleur ne gagne jamais le pli ; les atouts ne gagnent que sur un pli entamé à l'atout.
 
 Il ne reste aucune question ouverte sur les règles.

@@ -58,13 +58,20 @@ describe('bot heuristique : suite de pli', () => {
     expect(play(view)).toBe('excuse')
   })
 
-  it("garde l'excuse quand elle gagnerait le pli et qu'un atout numéroté gagne aussi", () => {
-    // Trèfle demandé, plus de trèfle : atout obligatoire. Aucun atout dans le pli, donc X (seul atout) et T3 gagnent tous les deux.
+  it("défausse l'excuse sans la couleur demandée : elle ne gagne pas et donne 100 points à l'autre", () => {
     const view = viewOf(
-      { playerCount: 3, hands: [['C9'], ['X', 'T3'], ['C5']], trick: [{ seat: 0, card: 'C9' }] },
+      { playerCount: 3, hands: [['C9'], ['X', 'T3', 'H2'], ['C5']], trick: [{ seat: 0, card: 'C9' }] },
       1,
     )
-    expect(play(view)).toBe(c('T3').id)
+    expect(play(view)).toBe('excuse')
+  })
+
+  it("défausse le 21 sans la couleur demandée quand il n'a pas l'excuse", () => {
+    const view = viewOf(
+      { playerCount: 3, hands: [['C9'], ['T21', 'T3', 'H2'], ['C5']], trick: [{ seat: 0, card: 'C9' }] },
+      1,
+    )
+    expect(play(view)).toBe(c('T21').id)
   })
 
   it("joue l'excuse quand c'est le seul atout en main et qu'un atout est demandé", () => {

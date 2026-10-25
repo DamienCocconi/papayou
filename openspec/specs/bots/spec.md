@@ -80,29 +80,6 @@ Le système SHALL fournir un bot heuristique dont le but est de faire le moins d
 - **WHEN** le bot heuristique est entameur et possède le 7 de cœur et le 7 de pique mais pas ceux de carreau et de trèfle
 - **THEN** il choisit carreau ou trèfle
 
-### Requirement: Bot heuristique, jeu d'un pli
-Le système SHALL faire éviter au bot heuristique de gagner les plis. En suite de pli, s'il existe une carte légale qui ne remporte pas le pli tel qu'il est posé, il SHALL jouer parmi elles celle qui vaut le plus de points. Si toutes ses cartes légales remportent le pli, il SHALL jouer la plus faible.
-
-#### Scenario: Se débarrasser d'une carte chère sans gagner
-- **WHEN** un autre joueur est en train de gagner le pli et que le bot a, parmi ses cartes légales, une carte qui perd et vaut des points
-- **THEN** il joue celle qui vaut le plus de points parmi les cartes qui perdent
-
-#### Scenario: Excuse qui perdrait
-- **WHEN** l'excuse est légale, qu'un autre atout est déjà dans le pli (donc l'excuse ne gagnera pas) et que le bot n'a pas d'autre carte légale qui perde et vaille plus de points
-- **THEN** il joue l'excuse, qui donne ses 100 points au gagnant du pli
-
-#### Scenario: Obligé de gagner
-- **WHEN** toutes les cartes légales du bot remporteraient le pli
-- **THEN** il joue la plus faible
-
-#### Scenario: Excuse évitée quand elle gagnerait
-- **WHEN** la couleur demandée est une couleur dont le bot n'a plus, que le bot a l'excuse et un atout numéroté, et qu'aucun atout n'est encore dans le pli (toutes ses cartes légales remportent le pli)
-- **THEN** il joue l'atout numéroté et garde l'excuse, car la jouer lui ferait ramasser ses 100 points
-
-#### Scenario: Excuse seule carte légale
-- **WHEN** l'excuse est la seule carte légale du bot (seul atout demandé, ou entame forcée au dernier pli)
-- **THEN** il la joue
-
 ### Requirement: Bot heuristique, entame
 Le système SHALL faire entamer au bot heuristique la carte légale qui a le plus de chances de perdre le pli, estimée par le nombre de cartes plus fortes de même famille (même couleur, ou atouts) encore en jeu chez les autres joueurs. À égalité, il SHALL préférer la carte qui vaut le moins de points.
 
@@ -116,3 +93,26 @@ Le système SHALL faire marquer en moyenne moins de points au bot heuristique qu
 #### Scenario: Comparaison sur de nombreuses parties
 - **WHEN** un bot heuristique joue contre des bots aléatoires sur plusieurs centaines de parties à graines fixées, à chaque place tour à tour
 - **THEN** sa moyenne de points par partie est inférieure à celle des bots aléatoires
+
+### Requirement: Bot heuristique, suite de pli
+Le système SHALL faire éviter au bot heuristique de gagner les plis. En suite de pli, s'il existe une carte légale qui ne remporte pas le pli tel qu'il est posé, il SHALL jouer parmi elles celle qui vaut le plus de points. Si toutes ses cartes légales remportent le pli, il SHALL jouer la plus faible. Comme un atout ou l'excuse défaussé sur un pli de couleur ne gagne jamais, un bot sans la couleur demandée SHALL pouvoir s'en débarrasser sur le pli d'un autre joueur.
+
+#### Scenario: Se débarrasser d'une carte chère sans gagner
+- **WHEN** un autre joueur est en train de gagner le pli et que le bot a, parmi ses cartes légales, une carte qui perd et vaut des points
+- **THEN** il joue celle qui vaut le plus de points parmi les cartes qui perdent
+
+#### Scenario: Excuse défaussée sans la couleur demandée
+- **WHEN** le pli est entamé à une couleur dont le bot n'a plus, et que le bot a l'excuse et d'autres cartes qui valent moins de points
+- **THEN** il joue l'excuse, qui ne gagne pas et donne ses 100 points au gagnant du pli
+
+#### Scenario: Gros atout défaussé sans la couleur demandée
+- **WHEN** le pli est entamé à une couleur dont le bot n'a plus, et que l'atout 21 est sa carte la plus chère (sans l'excuse)
+- **THEN** il joue l'atout 21, qui ne gagne pas
+
+#### Scenario: Obligé de gagner
+- **WHEN** toutes les cartes légales du bot remporteraient le pli, par exemple parce qu'il n'a que des cartes de la couleur demandée plus hautes que celles déjà posées
+- **THEN** il joue la plus faible
+
+#### Scenario: Excuse seule carte légale
+- **WHEN** l'excuse est la seule carte légale du bot (seul atout quand un atout est demandé, ou entame forcée au dernier pli)
+- **THEN** il la joue

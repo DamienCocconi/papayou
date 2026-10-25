@@ -5,6 +5,7 @@ import type { Card, GameState, Play, PlayerView } from './types'
 /**
  * Cartes jouables avec la main `hand` quand `trick` contient les cartes déjà posées.
  * Pli vide : toute carte sauf l'excuse (sauf si c'est la seule carte : dernier pli, entame forcée).
+ * Couleur demandée : fournir si possible, sinon toute la main. Atout demandé : atout (excuse comprise) si possible.
  * Excuse en entame (dernier pli) : aucune couleur demandée, chaque joueur n'a qu'une carte.
  */
 export function legalCards(hand: readonly Card[], trick: readonly Play[]): Card[] {
@@ -16,10 +17,11 @@ export function legalCards(hand: readonly Card[], trick: readonly Play[]): Card[
   const lead = first.card
   if (lead.kind === 'excuse') return [...hand]
   if (lead.kind === 'suit') {
+    // Couleur demandée : on fournit si on peut, sinon défausse libre (pas d'obligation de couper).
     const sameSuit = hand.filter((c) => c.kind === 'suit' && c.suit === lead.suit)
-    if (sameSuit.length > 0) return sameSuit
+    return sameSuit.length > 0 ? sameSuit : [...hand]
   }
-  // Atout demandé, ou plus de la couleur demandée : atout obligatoire (excuse comprise).
+  // Atout demandé : atout obligatoire (excuse comprise), sinon n'importe quelle carte.
   const trumps = hand.filter(isTrumpOrExcuse)
   return trumps.length > 0 ? trumps : [...hand]
 }
@@ -47,26 +49,25 @@ export function currentPlayer(state: GameState): number | null {
 }
 
 /**
- * Gagnant d'un pli complet.
+ * Gagnant d'un pli complet : l'atout est une cinquième couleur, il ne gagne que s'il est entamé.
  * - Excuse en entame (dernier pli) : victoire automatique.
- * - Sinon le plus gros atout (excuse = 0), sinon la plus haute carte de la couleur demandée.
+ * - Atout entamé : le plus gros atout (excuse = 0).
+ * - Couleur entamée : la plus haute carte de cette couleur ; les atouts et l'excuse défaussés ne gagnent jamais.
  */
 export function trickWinner(plays: readonly Play[]): number {
   const first = plays[0]
   if (first === undefined) throw new Error('trickWinner : pli vide')
   if (first.card.kind === 'excuse') return first.seat
 
-  const trumpPlays = plays.filter((p) => isTrumpOrExcuse(p.card))
-  if (trumpPlays.length > 0) {
-    let best = trumpPlays[0] as Play
-    for (const p of trumpPlays) {
-      if (trumpStrength(p.card) > trumpStrength(best.card)) best = p
+  if (first.card.kind === 'trump') {
+    let best = first
+    for (const p of plays) {
+      if (isTrumpOrExcuse(p.card) && trumpStrength(p.card) > trumpStrength(best.card)) best = p
     }
     return best.seat
   }
 
   const leadCard = first.card
-  if (leadCard.kind !== 'suit') throw new Error('trickWinner : entame inattendue')
   let best = first
   for (const p of plays) {
     if (p.card.kind === 'suit' && p.card.suit === leadCard.suit) {
