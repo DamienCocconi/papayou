@@ -9,7 +9,7 @@
 ## 2. Déploiement automatique
 
 - [x] 2.1 Créer `.github/workflows/deploy.yml` : déclencheurs `push` sur `main` et `workflow_dispatch` ; job `build` (checkout, Node 22 avec cache npm, `npm ci`, `npm test`, `npm run build`, `actions/configure-pages`, `actions/upload-pages-artifact` sur `dist`) ; job `deploy` (`actions/deploy-pages`, environnement `github-pages`) ; permissions minimales et groupe de concurrence. Vérification : le fichier est du YAML valide (par exemple `npx --yes yaml valid < .github/workflows/deploy.yml`) et relu contre la documentation des actions Pages.
-- [ ] 2.2 Régler une seule fois, dans GitHub, Settings > Pages > Source = « GitHub Actions » (étape manuelle de l'utilisateur). Vérification : la page Pages du dépôt affiche cette source.
+- [x] 2.2 Régler une seule fois, dans GitHub, Settings > Pages > Source = « GitHub Actions » (étape manuelle de l'utilisateur). Vérification : la page Pages du dépôt affiche cette source.
 
 ## 3. Documentation
 
@@ -18,8 +18,8 @@
 
 ## 4. Mise en ligne et contrôle
 
-- [ ] 4.1 Après fusion sur `main` et réglage de la tâche 2.2, vérifier que le workflow passe au vert et que `https://damiencocconi.github.io/papayou/` affiche l'accueil. Vérification : exécution du workflow en succès, page ouverte.
-- [ ] 4.2 Faire un aller-retour réel : un hôte crée une salle sur le site publié, un second appareil la rejoint par le lien. Vérification : les deux voient le lobby ; noter le résultat (réseau utilisé) pour la décision sur le TURN.
+- [x] 4.1 Après fusion sur `main` et réglage de la tâche 2.2, vérifier que le workflow passe au vert et que `https://damiencocconi.github.io/papayou/` affiche l'accueil. Vérification : exécution du workflow en succès, page ouverte.
+- [x] 4.2 Faire un aller-retour réel : un hôte crée une salle sur le site publié, un second appareil la rejoint par le lien. Vérification : les deux voient le lobby ; noter le résultat (réseau utilisé) pour la décision sur le TURN.
 
 ## Workflow follow-up
 
