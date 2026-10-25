@@ -58,6 +58,8 @@ Le second but compte autant que le premier. Il vaut mieux un workflow propre et 
 
 Chaque étape fait l'objet d'un changement OpenSpec distinct.
 
+Les idées d'amélioration recueillies en testant, pas encore arbitrées, sont consignées dans [`idees.md`](idees.md). Elles rejoignent cette feuille de route quand elles deviennent un changement.
+
 ## Façon de travailler souhaitée
 
 - Spec d'abord, code ensuite. Valider la proposition avant d'implémenter.
