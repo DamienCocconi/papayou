@@ -64,13 +64,13 @@ describe('obligations pour suivre', () => {
     expect(ids(legalPlays(s, 1))).toEqual(codes(['S3']))
   })
 
-  it('obligation de couper : atouts et excuse jouables si plus de la couleur', () => {
+  it('pas d\'obligation de couper : toute la main est jouable si plus de la couleur', () => {
     const s = playingState({
       playerCount: 3,
       hands: [['S10'], ['H2', 'T4', 'X'], ['H1']],
       trick,
     })
-    expect(ids(legalPlays(s, 1))).toEqual(codes(['T4', 'X']))
+    expect(ids(legalPlays(s, 1))).toEqual(codes(['H2', 'T4', 'X']))
   })
 
   it('défausse libre sans la couleur ni atout', () => {
@@ -105,12 +105,12 @@ describe('obligations pour suivre', () => {
     expect(ids(legalPlays(s, 1))).toEqual(['excuse'])
   })
 
-  it('excuse seul atout en main, plus de la couleur demandée : obligation de la jouer', () => {
+  it('plus de la couleur demandée : l\'excuse est jouable sans y être obligé', () => {
     const s = playingState({ playerCount: 3, hands: [['S10'], ['H2', 'X'], ['H1']], trick })
-    expect(ids(legalPlays(s, 1))).toEqual(['excuse'])
+    expect(ids(legalPlays(s, 1))).toEqual(codes(['H2', 'X']))
   })
 
-  it('pas d\'obligation de surcouper', () => {
+  it('un atout posé sur une couleur ne gagne pas : l\'entameur garde le pli', () => {
     const s = playingState({
       playerCount: 3,
       hands: [['S10'], ['T20'], ['T2', 'T15']],
@@ -121,10 +121,9 @@ describe('obligations pour suivre', () => {
       trickLeader: 0,
     })
     expect(ids(legalPlays(s, 2))).toEqual(codes(['T2', 'T15']))
-    // Jouer l'atout faible est accepté.
     const after = play(s, 2, 'T2')
     expect(after.lastTrick?.plays).toHaveLength(3)
-    expect(after.lastTrick?.winner).toBe(1)
+    expect(after.lastTrick?.winner).toBe(0)
   })
 
   it('un atout sous-coupe est accepté même quand on pourrait surcouper (atout demandé)', () => {
@@ -149,17 +148,22 @@ describe('gagnant d\'un pli', () => {
     expect(trickWinner(plays([[0, 'S2'], [1, 'H14'], [2, 'D14'], [3, 'S3']]))).toBe(3)
   })
 
-  it('exemple 2 : la coupe l\'emporte sur un roi de la couleur demandée', () => {
-    expect(trickWinner(plays([[0, 'H7'], [1, 'H2'], [2, 'T8'], [3, 'H14']]))).toBe(2)
+  it('exemple 2 : un atout posé sur une couleur ne gagne pas, même le 21', () => {
+    expect(trickWinner(plays([[0, 'H7'], [1, 'H2'], [2, 'T8'], [3, 'H14']]))).toBe(3)
+    expect(trickWinner(plays([[0, 'H2'], [1, 'T21'], [2, 'H3']]))).toBe(2)
   })
 
-  it('exemple 3 : l\'excuse perd contre n\'importe quel atout, même le 1', () => {
-    expect(trickWinner(plays([[0, 'C5'], [1, 'T14'], [2, 'X'], [3, 'C9']]))).toBe(1)
-    expect(trickWinner(plays([[0, 'C5'], [1, 'T1'], [2, 'X'], [3, 'C9']]))).toBe(1)
+  it('exemple 3 : sur un pli d\'atout, l\'excuse perd contre n\'importe quel atout, même le 1', () => {
+    expect(trickWinner(plays([[0, 'T14'], [1, 'X'], [2, 'C9'], [3, 'T5']]))).toBe(0)
+    expect(trickWinner(plays([[0, 'T1'], [1, 'X'], [2, 'C9']]))).toBe(0)
   })
 
-  it('exemple 4 : excuse seul atout du pli (sans entamer) : son joueur gagne', () => {
-    expect(trickWinner(plays([[0, 'C5'], [1, 'C2'], [2, 'X'], [3, 'C9']]))).toBe(2)
+  it('exemple 4 : l\'excuse défaussée sur une couleur ne gagne pas', () => {
+    expect(trickWinner(plays([[0, 'C5'], [1, 'C2'], [2, 'X'], [3, 'C9']]))).toBe(3)
+  })
+
+  it('les cartes d\'une autre couleur ne gagnent jamais un pli d\'atout', () => {
+    expect(trickWinner(plays([[0, 'T2'], [1, 'H14'], [2, 'D14']]))).toBe(0)
   })
 
   it('atout demandé : le plus fort atout gagne', () => {
@@ -167,7 +171,7 @@ describe('gagnant d\'un pli', () => {
   })
 
   it('le plus fort atout gagne quel que soit l\'ordre de jeu', () => {
-    expect(trickWinner(plays([[2, 'S1'], [0, 'T21'], [1, 'T4']]))).toBe(0)
+    expect(trickWinner(plays([[2, 'T4'], [0, 'T21'], [1, 'S1']]))).toBe(0)
   })
 })
 
@@ -199,16 +203,17 @@ describe('excuse : cas limites du dernier pli', () => {
     expect(s.roundScores[0]?.[0]).toBe(103)
   })
 
-  it('excuse jouée au dernier pli sans entamer et seul atout : elle gagne et garde ses 100 points', () => {
+  it('excuse jouée au dernier pli sans entamer sur une couleur : elle ne gagne pas, 100 points au gagnant', () => {
     let s = playingState({ playerCount: 3, hands: [['S9'], ['X'], ['S2']] })
     s = play(s, 0, 'S9')
     s = play(s, 1, 'X')
     s = play(s, 2, 'S2')
-    expect(s.lastTrick?.winner).toBe(1)
-    expect(s.roundScores[0]?.[1]).toBe(100)
+    expect(s.lastTrick?.winner).toBe(0)
+    expect(s.roundScores[0]?.[0]).toBe(100)
+    expect(s.roundScores[0]?.[1]).toBe(0)
   })
 
-  it('excuse seul atout du pli hors dernier pli : son joueur gagne et entame le pli suivant', () => {
+  it('excuse défaussée hors dernier pli : le gagnant de la couleur la ramasse et entame le pli suivant', () => {
     let s = playingState({
       playerCount: 3,
       hands: [['C5', 'H2'], ['X', 'H3'], ['C9', 'H4']],
@@ -216,9 +221,9 @@ describe('excuse : cas limites du dernier pli', () => {
     s = play(s, 0, 'C5')
     s = play(s, 1, 'X')
     s = play(s, 2, 'C9')
-    expect(s.lastTrick?.winner).toBe(1)
-    expect(s.trickLeader).toBe(1)
-    expect(s.won[1]?.map((x) => x.id)).toContain('excuse')
+    expect(s.lastTrick?.winner).toBe(2)
+    expect(s.trickLeader).toBe(2)
+    expect(s.won[2]?.map((x) => x.id)).toContain('excuse')
   })
 })
 
