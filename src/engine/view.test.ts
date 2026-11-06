@@ -136,7 +136,8 @@ describe('vue pour les bots', () => {
         }
       })
     }
-  })
+    // Parties complètes à chaque nombre de joueurs : la machine de GitHub peut dépasser les 5 s par défaut.
+  }, 30_000)
 
   it("trie les cartes jouées : l'ordre ne révèle pas le contenu des tas", () => {
     simulateGame(4, 5, (state) => {
