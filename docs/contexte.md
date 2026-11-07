@@ -56,7 +56,11 @@ Le second but compte autant que le premier. Il vaut mieux un workflow propre et 
 4. **Réseau**, en implémentant le même `GameController` :
    - `add-network` : salle PeerJS avec code et lien, lobby, vue entière par joueur et versionnée, bots sur l'hôte, pause et reprise de place quand un joueur part, administration par l'hôte, fin de manche avec chronomètre.
    - changement suivant : sauvegarde dans `localStorage` et reprise de la partie après la perte de l'hôte.
-5. **Finitions** : PWA, Wake Lock, ergonomie tactile, glisser-déposer, assets graphiques des cartes (figures roi, dame, cavalier, valet dessinées sur mesure, dans un changement dédié).
+5. **Main en éventail** (ergonomie tactile), en trois changements qui se suivent, chacun livrable seul :
+   - `add-fan-layout` : main en arc en bas d'un écran fixe, affichage étalé conservé et choix mémorisé sur l'appareil, coin des cartes lisible quand elles se chevauchent, résumé du dernier pli. Premier réglage stocké en `localStorage`.
+   - `add-fan-gestures` : balayage, emphase de la carte sous le doigt et glissement vers le haut pour jouer.
+   - `add-gift-slots` : trois emplacements pour l'échange, qui retire l'affichage étalé forcé pendant le don.
+6. **Finitions** : PWA, Wake Lock, ergonomie tactile, glisser-déposer, assets graphiques des cartes (figures roi, dame, cavalier, valet dessinées sur mesure, dans un changement dédié).
 
 Chaque étape fait l'objet d'un changement OpenSpec distinct.
 

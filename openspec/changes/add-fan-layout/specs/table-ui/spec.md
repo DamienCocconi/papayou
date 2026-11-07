@@ -51,6 +51,14 @@ En éventail, le système SHALL afficher la main en arc en bas de l'écran, avec
 - **WHEN** le joueur sélectionne une carte de l'éventail
 - **THEN** elle se lève et s'affiche devant ses voisines
 
+#### Scenario: Grand écran
+- **WHEN** une main s'affiche en éventail sur un écran de PC, par exemple 1920 x 1000 px
+- **THEN** les cartes sont plus grandes que sur téléphone, dans la limite d'un plafond, et l'éventail occupe une part raisonnable de la largeur
+
+#### Scenario: Redimensionnement
+- **WHEN** le joueur réduit ou agrandit la fenêtre
+- **THEN** la taille des cartes s'adapte, sans jamais passer sous la taille minimale lisible
+
 ### Requirement: Écran fixe en éventail
 En éventail, le système SHALL faire tenir l'écran de jeu dans la fenêtre, sans défilement de la page, en portrait comme en paysage, à partir de 360 x 640 px. Tourner l'appareil SHALL replacer les éléments sans changer la partie ni la sélection.
 

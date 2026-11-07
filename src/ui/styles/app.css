@@ -20,6 +20,7 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 
 .btn { background: var(--accent); color: var(--ink); border: 0; border-radius: 6px; padding: 8px 16px; font-weight: 600; }
 .btn.secondary { background: transparent; color: #f4f4f0; border: 1px solid var(--muted); }
+.icon-btn { display: inline-flex; align-items: center; padding: 6px 10px; }
 
 /* Accueil */
 .home { max-width: 420px; margin: 8vh auto; padding: 24px; background: var(--felt); border-radius: 12px; }
@@ -29,8 +30,14 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 .home .btn { margin-top: 24px; width: 100%; }
 
 /* Écran de jeu */
-.game { min-height: 100vh; display: flex; flex-direction: column; gap: 12px; padding: 12px; background: var(--felt); }
-.topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.game {
+  min-height: 100vh; display: flex; flex-direction: column; gap: 12px; background: var(--felt);
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 12px max(12px, env(safe-area-inset-left));
+}
+/* Barre du haut et statut : toujours visibles pendant le défilement (affichage étalé). */
+.head { position: sticky; top: 0; z-index: 30; background: var(--felt); display: flex; flex-direction: column; gap: 4px; padding-bottom: 4px; }
+.stage { display: flex; flex-direction: column; gap: 12px; }
+.topbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 12px; }
 .badge { padding: 4px 10px; border-radius: 999px; background: var(--felt-dark); font-size: 0.9rem; }
 .badge strong { color: var(--accent); }
 .status { text-align: center; min-height: 1.6em; }
@@ -63,7 +70,8 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
   font-weight: 700; font-size: 1rem; transition: transform 0.1s;
 }
 .card.red { color: var(--red); }
-.card .corner { line-height: 1; }
+.card .corner { display: flex; flex-direction: column; align-items: center; line-height: 1; }
+.card .corner-suit { font-size: 0.85em; margin-top: 1px; }
 .card .symbol { align-self: center; font-size: 1.8rem; line-height: 1; }
 .card.trump { color: var(--trump); background: #f1ecfa; }
 .card.excuse { color: var(--excuse); background: #fff3dc; }
@@ -90,3 +98,67 @@ button.card.selected:hover { transform: translateY(-14px); }
 .seat-list form { display: flex; gap: 6px; align-items: center; }
 .seat-list input { width: 160px; padding: 6px; font: inherit; }
 .panel.admin { max-width: 520px; margin: 0 auto; width: 100%; }
+
+/* Main en éventail */
+.hand.fan { position: relative; display: block; padding: 0; width: 100%; --fan-lift: calc(14px * var(--fan-k, 1)); }
+.fan-slot {
+  position: absolute; left: 0; top: var(--fan-lift); width: var(--card-w); height: var(--card-h);
+  transform-origin: 50% 100%; transition: transform 0.25s ease;
+}
+.fan-slot:focus-within { z-index: 999 !important; }
+.fan-slot .card:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+.fan-slot .card { width: 100%; height: 100%; padding: calc(2px * var(--fan-k, 1)); font-size: calc(13px * var(--fan-k, 1)); letter-spacing: -0.02em; }
+.fan-slot .card .symbol { font-size: calc(1.5rem * var(--fan-k, 1)); }
+.fan-slot .card.trump .symbol, .fan-slot .card.excuse .symbol { font-size: calc(0.6rem * var(--fan-k, 1)); letter-spacing: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .fan-slot { transition: none; }
+  .card { transition: none; }
+}
+
+/* Écran fixe : en éventail, la page ne défile pas (le bas des cartes peut dépasser). */
+html:has(.game.fan), body:has(.game.fan) { overflow: hidden; overscroll-behavior: none; height: 100%; }
+/* position: fixed plutôt que 100dvh : suit toujours la zone réellement visible (barre d'adresse mobile). */
+.game.fan { position: fixed; inset: 0; min-height: 0; overflow: hidden; gap: 6px; padding-bottom: env(safe-area-inset-bottom); }
+.game.fan .head { position: static; padding-bottom: 0; }
+.game.fan .stage { position: relative; flex: 1 1 0; min-height: 0; gap: 6px; overflow: hidden; }
+.game.fan .hand-zone { flex: none; padding-bottom: 36px; } /* portrait : l'éventail remonte, cartes entières visibles (le paysage a sa propre valeur plus bas) */
+.game.fan .seats { gap: 4px; }
+.game.fan .seat { flex: 0 0 calc(33.333% - 3px); min-width: 0; padding: 4px; }
+.game.fan .seat .meta { font-size: 0.7rem; }
+.game.fan .seat .slot { height: calc(var(--card-h) * 0.5 + 4px); }
+.game.fan .seat .card.small { --card-w: 30px; --card-h: 45px; font-size: 0.65rem; padding: 2px; }
+.game.fan .seat .card.small .symbol { font-size: 0.9rem; }
+.game.fan .seat .card.small.trump .symbol, .game.fan .seat .card.small.excuse .symbol { font-size: 0.4rem; }
+.game.fan .center { gap: 8px; }
+.last-trick-summary { padding: 4px 10px; font-size: 0.85rem; }
+
+/* Surcouche des panneaux, avec défilement interne si le panneau est trop haut. */
+.overlay {
+  position: absolute; inset: 0; z-index: 20; overflow-y: auto; display: flex; padding: 6px;
+  background: rgba(0, 0, 0, 0.55);
+}
+.overlay > * { margin: auto; max-width: 100%; }
+.overlay .panel ul { margin: 6px 0; padding-left: 18px; }
+
+/* Petits écrans : barre compacte */
+@media (max-width: 480px) {
+  .suit-name { display: none; }
+  .badge { font-size: 0.8rem; padding: 3px 8px; }
+  .topbar .btn { padding: 6px 10px; font-size: 0.85rem; }
+}
+/* Paysage : peu de hauteur, 6 joueurs sur une rangée */
+@media (max-height: 480px) {
+  .game.fan { gap: 2px; padding-top: max(4px, env(safe-area-inset-top)); }
+  .game.fan .seat { flex-basis: calc(16.666% - 4px); }
+  .game.fan .seat .name { font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .game.fan .seat .meta { display: none; }
+  .game.fan .status { min-height: 0; font-size: 0.85rem; }
+  .game.fan .seat .slot { height: 68px; }
+  .game.fan .seat .card.small { --card-w: 42px; --card-h: 63px; font-size: 0.75rem; }
+  .game.fan .seat .card.small .symbol { font-size: 1.1rem; }
+  /* L'espace libre entre la table et la main est réparti autour de la table, et la main remonte. */
+  .game.fan .stage { justify-content: center; }
+  .game.fan .hand-zone { padding-bottom: 22px; }
+  .overlay .panel ul { columns: 2; column-gap: 24px; margin: 4px 0; }
+  .overlay .panel h3 { margin-bottom: 4px; }
+}

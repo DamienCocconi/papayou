@@ -32,7 +32,10 @@ export function CardView({ card, selected, disabled, small, onClick }: Props) {
     .join(' ')
   const content = (
     <>
-      <span className="corner">{corner}</span>
+      <span className="corner">
+        <span className="rank">{corner}</span>
+        {card.kind === 'suit' && <span className="corner-suit">{symbol}</span>}
+      </span>
       <span className="symbol">{symbol}</span>
     </>
   )

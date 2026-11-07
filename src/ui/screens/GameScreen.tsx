@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
 import type { Action, Suit } from '../../engine'
 import type { GameController } from '../controller/types'
 import { GameEnd } from '../components/GameEnd'
@@ -9,6 +10,8 @@ import type { AdminActions } from '../components/NetworkPanels'
 import { PapayouPicker } from '../components/PapayouPicker'
 import { RoundEnd } from '../components/RoundEnd'
 import { Table } from '../components/Table'
+import { browserStorage, readLayout, writeLayout } from '../hand/layoutPreference'
+import type { HandLayout } from '../hand/layoutPreference'
 import { playerName, roomErrorText, seatNames, SUIT_NAME, SUIT_SYMBOL, turnSeat } from '../labels'
 import { useGame } from '../useGame'
 
@@ -31,6 +34,18 @@ export function GameScreen({ controller, onQuit, admin }: Props) {
   const names = useMemo(() => (session ? seatNames(session, me) : null), [session, me])
   const [adminOpen, setAdminOpen] = useState(false)
   const turn = turnSeat(view)
+
+  // Choix d'affichage de la main, propre à cet appareil (jamais envoyé sur le réseau).
+  const [layoutChoice, setLayoutChoice] = useState<HandLayout>(() => readLayout(browserStorage()))
+  function toggleLayout() {
+    const next: HandLayout = layoutChoice === 'fan' ? 'spread' : 'fan'
+    setLayoutChoice(next)
+    writeLayout(browserStorage(), next)
+  }
+  // Tant que le joueur doit choisir ses cartes à donner, la main s'affiche étalée sans toucher à son choix.
+  const giving = view.phase === 'exchange' && view.myGift === null
+  const layout: HandLayout = giving ? 'spread' : layoutChoice
+  const fan = layout === 'fan'
 
   // La sélection de la main repart de zéro quand la phase, le tour ou le nombre de cartes change.
   const resetKey = `${view.phase}-${view.roundIndex}-${view.tricksPlayed}-${view.trick.length}-${view.hand.length}`
@@ -67,65 +82,118 @@ export function GameScreen({ controller, onQuit, admin }: Props) {
     paused ? 'view' : view.phase === 'exchange' && view.myGift === null ? 'give' : view.phase === 'playing' ? 'play' : 'view'
   const marked = useMemo(() => new Set((view.myGift ?? []).map((c) => c.id)), [view.myGift])
 
+  const adminPanel =
+    admin !== undefined && session !== null && adminOpen ? (
+      <AdminMenu session={session} mySeat={me} actions={admin} onClose={() => setAdminOpen(false)} />
+    ) : null
+  const endPanels: ReactNode = (
+    <>
+      {view.phase === 'roundEnd' && (
+        <RoundEnd
+          view={view}
+          names={names}
+          network={session?.roundEnd ? { info: session.roundEnd, receivedAt: session.receivedAt } : null}
+          onNextRound={() => dispatch({ type: 'nextRound' })}
+        />
+      )}
+      {view.phase === 'gameEnd' && <GameEnd view={view} names={names} onQuit={onQuit} />}
+    </>
+  )
+  const hasEndPanel = view.phase === 'roundEnd' || view.phase === 'gameEnd'
+
   return (
-    <div className="game">
-      <div className="topbar">
-        <span className="badge">
-          Manche {Math.min(view.roundIndex + 1, view.playerCount)} / {view.playerCount}
-        </span>
-        {view.papayouSuit !== null && (
+    <div className={`game${fan ? ' fan' : ''}`}>
+      <div className="head">
+        <div className="topbar">
           <span className="badge">
-            Papayou : <strong>{SUIT_SYMBOL[view.papayouSuit]}</strong> {SUIT_NAME[view.papayouSuit]}
+            Manche {Math.min(view.roundIndex + 1, view.playerCount)} / {view.playerCount}
           </span>
-        )}
-        <span className="topbar-actions">
-          {admin !== undefined && session !== null && (
-            <button type="button" className="btn secondary" onClick={() => setAdminOpen((open) => !open)}>
-              Administration
-            </button>
+          {view.papayouSuit !== null && (
+            <span className="badge">
+              Papayou : <strong>{SUIT_SYMBOL[view.papayouSuit]}</strong>
+              <span className="suit-name"> {SUIT_NAME[view.papayouSuit]}</span>
+            </span>
           )}
-          <button type="button" className="btn secondary" onClick={onQuit}>
-            Quitter
-          </button>
-        </span>
+          <span className="topbar-actions">
+            {!giving && (
+              <button
+                type="button"
+                className="btn secondary icon-btn"
+                aria-label={fan ? 'Afficher la main étalée' : 'Afficher la main en éventail'}
+                title={fan ? 'Main étalée' : 'Main en éventail'}
+                onClick={toggleLayout}
+              >
+                {fan ? <GridIcon /> : <FanIcon />}
+              </button>
+            )}
+            {admin !== undefined && session !== null && (
+              <button type="button" className="btn secondary" onClick={() => setAdminOpen((open) => !open)}>
+                Administration
+              </button>
+            )}
+            <button type="button" className="btn secondary" onClick={onQuit}>
+              Quitter
+            </button>
+          </span>
+        </div>
+        <div className="status" role="status">
+          {error ?? (session?.error ? roomErrorText(session.error) : status())}
+        </div>
       </div>
 
       {session !== null && paused && <PauseBanner session={session} mySeat={me} />}
-      {admin !== undefined && session !== null && adminOpen && (
-        <AdminMenu session={session} mySeat={me} actions={admin} onClose={() => setAdminOpen(false)} />
-      )}
+      {!fan && adminPanel}
 
-      <div className="status" role="status">
-        {error ?? (session?.error ? roomErrorText(session.error) : status())}
+      <div className="stage">
+        <Table view={view} names={names} />
+
+        <div className="center">
+          {view.phase === 'choosePapayou' && view.roundLeader === me && (
+            <PapayouPicker onPick={(suit: Suit) => dispatch({ type: 'choosePapayou', seat: me, suit })} />
+          )}
+          {!fan && endPanels}
+          <LastTrick view={view} names={names} compact={fan} />
+        </div>
+
+        {fan && hasEndPanel && <div className="overlay">{endPanels}</div>}
+        {fan && adminPanel !== null && <div className="overlay">{adminPanel}</div>}
       </div>
 
-      <Table view={view} names={names} />
-
-      <div className="center">
-        {view.phase === 'choosePapayou' && view.roundLeader === me && (
-          <PapayouPicker onPick={(suit: Suit) => dispatch({ type: 'choosePapayou', seat: me, suit })} />
-        )}
-        {view.phase === 'roundEnd' && (
-          <RoundEnd
-            view={view}
-            names={names}
-            network={session?.roundEnd ? { info: session.roundEnd, receivedAt: session.receivedAt } : null}
-            onNextRound={() => dispatch({ type: 'nextRound' })}
-          />
-        )}
-        {view.phase === 'gameEnd' && <GameEnd view={view} names={names} onQuit={onQuit} />}
-        <LastTrick view={view} names={names} />
+      <div className="hand-zone">
+        <Hand
+          cards={view.hand}
+          mode={handMode}
+          layout={layout}
+          resetKey={resetKey}
+          playableIds={playableIds}
+          markedIds={marked}
+          onPlay={(cardId) => dispatch({ type: 'playCard', seat: me, cardId })}
+          onGive={(cardIds) => dispatch({ type: 'giveCards', seat: me, cardIds })}
+        />
       </div>
-
-      <Hand
-        key={resetKey}
-        cards={view.hand}
-        mode={handMode}
-        playableIds={playableIds}
-        markedIds={marked}
-        onPlay={(cardId) => dispatch({ type: 'playCard', seat: me, cardId })}
-        onGive={(cardIds) => dispatch({ type: 'giveCards', seat: me, cardIds })}
-      />
     </div>
+  )
+}
+
+/** Icône du bouton « main étalée » : une grille de cartes. */
+function GridIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="currentColor">
+      <rect x="3" y="4" width="8" height="7" rx="1.5" />
+      <rect x="13" y="4" width="8" height="7" rx="1.5" />
+      <rect x="3" y="13" width="8" height="7" rx="1.5" />
+      <rect x="13" y="13" width="8" height="7" rx="1.5" />
+    </svg>
+  )
+}
+
+/** Icône du bouton « main en éventail » : trois cartes en arc. */
+function FanIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="currentColor">
+      <rect x="9.5" y="5" width="5" height="14" rx="1" />
+      <rect x="9.5" y="5" width="5" height="14" rx="1" transform="rotate(-28 12 20)" />
+      <rect x="9.5" y="5" width="5" height="14" rx="1" transform="rotate(28 12 20)" />
+    </svg>
   )
 }
