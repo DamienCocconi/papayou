@@ -33,6 +33,6 @@ Aucune.
 ## Impact
 
 - **Dépendance :** s'applique après `add-fan-layout`, une fois celui-ci archivé. Ce change s'appuie sur sa géométrie (`fanLayout`) et sur son composant `Hand`.
-- **Code :** `src/ui/components/Hand.tsx`, `src/ui/screens/GameScreen.tsx`, `src/ui/styles/app.css`. Nouveaux modules purs dans `src/ui/hand` pour l'emphase et les états du geste, avec leurs tests.
+- **Code :** `src/ui/components/Hand.tsx`, `src/ui/screens/GameScreen.tsx`, `src/ui/styles/app.css`. Nouveau composant `src/ui/components/FanHand.tsx`, nouveau hook et nouveaux modules purs dans `src/ui/hand` pour l'emphase et les états du geste, avec leurs tests.
 - **Sans impact :** moteur, bots, protocole réseau et contrôleurs. Aucune nouvelle dépendance.
 - **Recette :** le ressenti se juge sur un vrai téléphone ; les tests automatiques ne couvrent que la logique.

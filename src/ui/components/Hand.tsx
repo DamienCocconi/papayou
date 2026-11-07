@@ -1,25 +1,23 @@
-import { useState } from 'react'
-import type { CSSProperties } from 'react'
+import { useCallback, useState } from 'react'
 import type { Card } from '../../engine'
 import { GIFT_SIZE } from '../../engine'
-import { fanCardSize, fanHeight, fanLayout, fanScale } from '../hand/fanLayout'
 import type { HandLayout } from '../hand/layoutPreference'
-import { useElementWidth } from '../hand/useElementWidth'
-import { useViewportSize } from '../hand/useViewportSize'
 import { CardView } from './CardView'
+import { FanHand } from './FanHand'
 
 interface Props {
   cards: readonly Card[]
   /**
-   * - play : un clic sélectionne une carte jouable, un second clic la joue ;
-   * - give : sélection de GIFT_SIZE cartes, validée par un bouton ;
+   * - play : en étalé, un clic sélectionne une carte jouable et un second clic la joue ; en éventail,
+   *   on tire la carte vers le haut ;
+   * - give : sélection de GIFT_SIZE cartes, validée par un bouton (toujours en étalé) ;
    * - view : affichage seul.
    */
   mode: 'play' | 'give' | 'view'
   /** Affichage : en arc (`fan`) ou en grille (`spread`). Changer d'affichage garde la sélection. */
   layout: HandLayout
   /**
-   * Change quand la situation change (phase, manche, pli, taille de la main) : la sélection
+   * Change quand la situation change (phase, manche, pli, taille de la main) : en étalé, la sélection
    * est alors considérée comme vide.
    */
   resetKey: string
@@ -27,8 +25,13 @@ interface Props {
   playableIds?: ReadonlySet<string>
   /** Ids mis en avant en mode view (par exemple les cartes déjà données). */
   markedIds?: ReadonlySet<string>
-  onPlay?: (cardId: string) => void
+  /** Renvoie faux si le coup est refusé tout de suite. */
+  onPlay?: (cardId: string) => boolean
   onGive?: (cardIds: string[]) => void
+  /** Une carte a été tirée en éventail alors qu'elle ne peut pas être jouée. */
+  onRefuse?: (cardId: string) => void
+  /** Change à chaque refus de l'hôte reçu après l'envoi d'un coup (null : aucun). */
+  playRefusal?: number | null
 }
 
 /**
@@ -36,15 +39,27 @@ interface Props {
  * Elle est stockée avec la `resetKey` pour laquelle elle est valable : si la clé a changé, elle
  * est vide, sans rendu intermédiaire périmé et sans remonter la main (les cartes gardent leur
  * élément du DOM, ce qui permet aux transitions de l'éventail de glisser).
+ * En éventail, la même donnée est l'emphase conservée après le lever du doigt.
  */
-export function Hand({ cards, mode, layout, resetKey, playableIds, markedIds, onPlay, onGive }: Props) {
+export function Hand({ cards, mode, layout, resetKey, playableIds, markedIds, onPlay, onGive, onRefuse, playRefusal }: Props) {
   const [stored, setStored] = useState<{ key: string; ids: string[] }>({ key: resetKey, ids: [] })
-  const selected = stored.key === resetKey ? stored.ids : []
   const fan = layout === 'fan'
-  const [fanRef, width] = useElementWidth<HTMLDivElement>(fan)
-  const viewport = useViewportSize()
-  const scale = fanScale(viewport.width, viewport.height)
-  const cardSize = fanCardSize(scale)
+
+  // Quand la situation change, on ajuste la sélection pendant le rendu (idiome React pour adapter un état
+  // à une prop). En étalé, elle est perdue pour de bon : elle ne doit pas revenir en changeant d'affichage.
+  // En éventail, l'emphase reste jusqu'à ce que le joueur touche ailleurs : un coup d'un autre joueur ne la
+  // retire pas tant que la carte est en main, et passer en étalé la transmet comme sélection.
+  // Une sélection de plusieurs cartes vient du don, et ne devient pas une emphase.
+  if (stored.key !== resetKey) {
+    const [id] = stored.ids
+    const keep = fan && stored.ids.length === 1 && cards.some((card) => card.id === id)
+    setStored({ key: resetKey, ids: keep ? stored.ids : [] })
+  }
+  const selected = stored.key === resetKey ? stored.ids : []
+
+  const select = useCallback((cardId: string | null) => {
+    setStored({ key: resetKey, ids: cardId === null ? [] : [cardId] })
+  }, [resetKey])
 
   function click(card: Card) {
     if (mode === 'play') {
@@ -60,57 +75,31 @@ export function Hand({ cards, mode, layout, resetKey, playableIds, markedIds, on
     }
   }
 
-  function cardView(card: Card) {
-    return (
-      <CardView
-        key={card.id}
-        card={card}
-        selected={selected.includes(card.id) || markedIds?.has(card.id) === true}
-        disabled={mode === 'play' && playableIds?.has(card.id) !== true}
-        onClick={mode === 'view' ? undefined : () => click(card)}
-      />
-    )
-  }
-
-  const slots = fan ? fanLayout(cards.length, width, scale) : []
-
   return (
     <div>
       {fan ? (
-        <div
-          ref={fanRef}
-          className="hand fan"
-          style={
-            {
-              height: fanHeight(scale),
-              '--card-w': `${cardSize.width}px`,
-              '--card-h': `${cardSize.height}px`,
-              '--fan-k': scale,
-            } as CSSProperties
-          }
-        >
-          {width > 0 &&
-            cards.map((card, i) => {
-              const slot = slots[i]
-              if (slot === undefined) return null
-              const lifted = selected.includes(card.id)
-              return (
-                <div
-                  key={card.id}
-                  className="fan-slot"
-                  style={{
-                    transform: `translate(${slot.x}px, ${slot.y}px) rotate(${slot.rotation}deg)`,
-                    zIndex: lifted ? 1000 : i + 1,
-                  }}
-                >
-                  {cardView(card)}
-                </div>
-              )
-            })}
-        </div>
+        <FanHand
+          cards={cards}
+          canPlay={(cardId) => mode === 'play' && playableIds?.has(cardId) === true}
+          isDisabled={(cardId) => mode === 'play' && playableIds?.has(cardId) !== true}
+          markedIds={markedIds}
+          emphasizedId={selected.length === 1 ? (selected[0] ?? null) : null}
+          onSelect={select}
+          onPlay={(cardId) => onPlay?.(cardId) ?? false}
+          onRefuse={(cardId) => onRefuse?.(cardId)}
+          remoteRefusal={playRefusal ?? null}
+        />
       ) : (
         <div className="hand">
-          {cards.map(cardView)}
+          {cards.map((card) => (
+            <CardView
+              key={card.id}
+              card={card}
+              selected={selected.includes(card.id) || markedIds?.has(card.id) === true}
+              disabled={mode === 'play' && playableIds?.has(card.id) !== true}
+              onClick={mode === 'view' ? undefined : () => click(card)}
+            />
+          ))}
         </div>
       )}
       {mode === 'give' && (
