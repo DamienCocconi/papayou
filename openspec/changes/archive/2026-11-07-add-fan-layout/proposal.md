@@ -13,6 +13,7 @@ La main s'affiche aujourd'hui en grille : à 19 cartes sur un téléphone, elle 
 - Le coin des cartes affiche le rang **et** la couleur, pour rester lisible quand les cartes se chevauchent.
 - Le résumé du dernier pli reste visible en éventail, et ses cartes s'affichent à la demande.
 - Après une carte posée, les cartes restantes glissent vers leur nouvelle place.
+- Sur un écran plus grand qu'un téléphone, les cartes de l'éventail s'agrandissent avec la place disponible, dans la limite d'un plafond.
 
 La façon de jouer ne change pas dans ce change : on joue toujours en deux clics, dans les deux modes. L'échange s'affiche en étalé jusqu'à `add-gift-slots`, pour que le jeu reste complet à chaque livraison.
 

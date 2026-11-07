@@ -98,7 +98,7 @@ Une fois la couleur du papayou choisie, la carte papayou (le 7 ou le 10 selon le
 
 Donner au trèfle et au carreau une teinte différente de celle du cœur et du pique : le cœur et le pique restent rouge et noir, le trèfle tire vers le **vert**, le carreau vers le **jaune**. Les joueurs peuvent basculer entre couleurs standard et modifiées. Ce réglage ne s'applique **qu'à leur écran** : c'est un réglage par client, pas par partie.
 
-Ce sera sans doute le premier réglage stocké en `localStorage`. À rapprocher du futur change de sauvegarde.
+Le choix d'affichage de la main (`add-fan-layout`) est le premier réglage stocké en `localStorage` (clé `papayou.handLayout`) ; celui-ci suivra le même modèle. À rapprocher du futur change de sauvegarde.
 
 ## Rythme du pli
 
