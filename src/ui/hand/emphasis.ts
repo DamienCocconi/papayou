@@ -48,8 +48,10 @@ const HELD_FINGER_GAP = 24
 /** Ligne de jeu : part de la hauteur de l'écran, et écart minimal au-dessus de la main. */
 const LINE_RATIO = 0.55
 const LINE_MIN_GAP = 12
-/** Montée minimale depuis l'appui pour jouer : une carte prise déjà haut ne part pas sur un petit coup. */
+/** Écart minimal entre le bas de la carte, quand elle est prise, et la ligne : un petit coup ne la joue pas. */
 const LINE_MIN_RISE = 70
+/** Écart minimal entre le haut de l'écran et la ligne : il reste une bande confortable où poser la carte. */
+const LINE_TOP_MARGIN = 70
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value))
@@ -175,11 +177,14 @@ export function playLineY(bounds: ScreenBounds): number {
 }
 
 /**
- * Ligne de jeu d'une prise : la ligne de l'écran, remontée si l'appui était trop haut pour qu'on la
- * franchisse vraiment (carte en emphase agrandie, surtout en paysage).
+ * Ligne de jeu d'une prise, fixée une fois pour toutes au moment où la carte est prise : la ligne de
+ * l'écran, remontée si le bas de la carte (`pointerY` moins l'écart au doigt) en est trop proche.
+ * Elle reste à distance du haut de l'écran (`screenTop`), quitte à réduire l'écart avec la carte.
  */
-export function holdLineY(lineY: number, pressY: number): number {
-  return Math.min(lineY, pressY - HELD_FINGER_GAP - LINE_MIN_RISE)
+export function holdLineY(lineY: number, pointerY: number, screenTop: number): number {
+  const raised = pointerY - HELD_FINGER_GAP - LINE_MIN_RISE
+  const highest = screenTop + LINE_TOP_MARGIN
+  return Math.min(lineY, Math.max(raised, highest))
 }
 
 /** Vrai quand la carte tenue par un pointeur à `pointerY` est entièrement au-dessus de la ligne. */

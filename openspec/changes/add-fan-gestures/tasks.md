@@ -29,11 +29,12 @@ Branche d'implémentation : `feat/add-fan-gestures`, tirée de `origin/main` une
 ## 6. Vérification d'ensemble
 
 - [x] 6.1 Lancer `npm test` et `npm run build`. Vérifier qu'ils réussissent, puis rapporter les résultats tels quels.
-- [ ] 6.2 Recette manuelle par l'utilisateur sur un vrai téléphone (`npm run dev -- --host`), en portrait et en paysage : balayage sans défilement ni rechargement, carte lisible au-dessus du doigt et aux extrémités, passage naturel du balayage à la prise, annulation sous la ligne, coup joué au-dessus, fluidité. Trancher à cette occasion la position de l'emphase (design, Open Questions).
-- [ ] 6.3 Provoquer les cas limites sur téléphone : notification pendant une prise, deuxième doigt, départ depuis le bord de l'écran sur iPhone, appui long.
-- [ ] 6.4 Vérifier sur PC, à la souris, dans au moins Chrome et Firefox : survol, prise, retour et coup joué.
-- [ ] 6.5 Faire une courte partie en réseau, avec le PC en hôte et le téléphone en invité : la carte relâchée ne clignote pas et ne revient pas dans la main avant la réponse, et une mise en pause pendant une prise n'envoie aucun coup.
+- [x] 6.2 Recette manuelle par l'utilisateur sur un vrai téléphone (`npm run dev -- --host`), en portrait et en paysage : balayage sans défilement ni rechargement, carte lisible au-dessus du doigt et aux extrémités, passage naturel du balayage à la prise, annulation sous la ligne, coup joué au-dessus, fluidité. Trancher à cette occasion la position de l'emphase (design, Open Questions).
+- [x] 6.3 Provoquer les cas limites sur téléphone : notification pendant une prise, deuxième doigt, départ depuis le bord de l'écran sur iPhone, appui long. Résultat : notifications (SMS, appel) validées ; iPhone non testé, faute d'appareil, point écarté par l'utilisateur.
+- [x] 6.4 Vérifier sur PC, à la souris, dans au moins Chrome et Firefox : survol, prise, retour et coup joué.
+- [x] 6.5 Faire une courte partie en réseau, avec le PC en hôte et le téléphone en invité : la carte relâchée ne clignote pas et ne revient pas dans la main avant la réponse, et une mise en pause pendant une prise n'envoie aucun coup.
 - [x] 6.6 Faire relire le change par `qa-reviewer` par rapport à la spec. Vérifier que les remarques sont traitées ou explicitement écartées.
+- [x] 6.7 Corriger les retours de la recette : ligne fixée à la prise et limite haute, carte au-dessus de la barre, texte non sélectionnable (panneau de recherche de Chrome), position remesurée à la rotation, emphase maintenue à la souris. Vérifier par les tests, puis par la recette de l'utilisateur, qui a repris le tactile, la souris et le réseau après ces corrections.
 
 ## Workflow follow-up
 

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import type { Card } from '../../engine'
 import { emphasisLayout, heldLayout, playLineY } from '../hand/emphasis'
@@ -41,12 +41,22 @@ export function FanHand({ cards, canPlay, isDisabled, markedIds, emphasizedId, o
   const box: CardBox = { width: size.width, height: size.height, lift: FAN_LIFT * scale }
 
   // Position du conteneur dans l'écran : les bornes de l'emphase et la ligne de jeu en dépendent.
+  // Mesurée à chaque rendu, et quand l'écran de jeu change de taille : à la rotation du téléphone, la
+  // mise en page finale peut arriver après l'événement `resize`, et la position retenue serait périmée.
   const [origin, setOrigin] = useState({ left: 0, top: 0 })
-  useLayoutEffect(() => {
+  const measureOrigin = useCallback(() => {
     const rect = containerRef.current?.getBoundingClientRect()
     if (rect === undefined) return
     setOrigin((cur) => (cur.left === rect.left && cur.top === rect.top ? cur : { left: rect.left, top: rect.top }))
-  }, [containerRef, width, viewport.width, viewport.height])
+  }, [containerRef])
+  useLayoutEffect(measureOrigin)
+  useLayoutEffect(() => {
+    const game = containerRef.current?.closest('.game')
+    if (game == null || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(measureOrigin)
+    observer.observe(game)
+    return () => observer.disconnect()
+  }, [containerRef, measureOrigin])
   const bounds: ScreenBounds = {
     left: -origin.left,
     right: viewport.width - origin.left,
@@ -63,6 +73,7 @@ export function FanHand({ cards, canPlay, isDisabled, markedIds, emphasizedId, o
       slots,
       cardSize: size,
       lineY: playLineY(bounds),
+      screenTop: bounds.top,
       emphasizedId,
       canPlay,
     },

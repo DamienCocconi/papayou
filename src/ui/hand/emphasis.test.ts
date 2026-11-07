@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { designateCard, emphasisLayout, restBandCenter, emphasisScale, EMPHASIS_SCALE, heldLayout, isAboveLine, playLineY } from './emphasis'
+import { designateCard, emphasisLayout, restBandCenter, emphasisScale, EMPHASIS_SCALE, heldLayout, holdLineY, isAboveLine, playLineY } from './emphasis'
 import type { CardBox, DisplayedSlot, ScreenBounds } from './emphasis'
 import { FAN_LIFT, fanCardSize, fanLayout, fanScale } from './fanLayout'
 
@@ -249,6 +249,31 @@ describe('playLineY', () => {
 
   it('reste au-dessus de la main même si elle occupe presque tout l’écran', () => {
     expect(playLineY({ left: 0, right: 360, top: -40, bottom: 400 })).toBeLessThan(0)
+  })
+})
+
+describe('holdLineY', () => {
+  it('garde la ligne de l’écran quand le bas de la carte en est assez loin', () => {
+    expect(holdLineY(-200, 10, -500)).toBe(-200)
+  })
+
+  it('place la ligne 70 px au-dessus du bas de la carte quand il en est trop proche', () => {
+    const line = holdLineY(-42, -60, -300)
+    expect(line).toBe(-60 - 24 - 70)
+    expect(isAboveLine(-60, line)).toBe(false)
+    expect(isAboveLine(-60 - 69, line)).toBe(false)
+    expect(isAboveLine(-60 - 71, line)).toBe(true)
+  })
+
+  it('reste à 70 px du haut de l’écran et franchissable, même pour une prise tout en haut', () => {
+    const screenTop = -240
+    const line = holdLineY(-42, screenTop + 5, screenTop)
+    expect(line).toBe(screenTop + 70)
+    expect(isAboveLine(screenTop, line)).toBe(true)
+  })
+
+  it('ne descend jamais sous la ligne de l’écran', () => {
+    expect(holdLineY(-42, 200, -60)).toBe(-42)
   })
 })
 

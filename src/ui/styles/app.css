@@ -32,6 +32,8 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 /* Écran de jeu */
 .game {
   min-height: 100vh; display: flex; flex-direction: column; gap: 12px; background: var(--felt);
+  /* Texte non sélectionnable : sinon Chrome sur Android ouvre son panneau de recherche Google au toucher d'un mot. */
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
   padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 12px max(12px, env(safe-area-inset-left));
 }
 /* Barre du haut et statut : toujours visibles pendant le défilement (affichage étalé). */
@@ -140,7 +142,8 @@ button.card.selected:hover { transform: translateY(-14px); }
 html:has(.game.fan), body:has(.game.fan) { overflow: hidden; overscroll-behavior: none; height: 100%; }
 /* position: fixed plutôt que 100dvh : suit toujours la zone réellement visible (barre d'adresse mobile). */
 .game.fan { position: fixed; inset: 0; min-height: 0; overflow: hidden; gap: 6px; padding-bottom: env(safe-area-inset-bottom); }
-.game.fan .head { position: static; padding-bottom: 0; }
+/* z-index: auto : un élément flex garde son z-index même en position static, et passerait devant la carte tenue. */
+.game.fan .head { position: static; z-index: auto; padding-bottom: 0; }
 .game.fan .stage { position: relative; flex: 1 1 0; min-height: 0; gap: 6px; overflow: hidden; }
 /* Au-dessus de la table et des panneaux : la carte en emphase et la carte tenue y débordent. */
 .game.fan .hand-zone { position: relative; z-index: 25; flex: none; padding-bottom: 36px; }

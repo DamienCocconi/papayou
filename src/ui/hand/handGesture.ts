@@ -14,6 +14,8 @@ export type GestureState =
       phase: 'scrubbing'
       pointerId: number
       cardId: string
+      /** Geste à la souris : un simple clic ne retient pas la carte, contrairement à un toucher. */
+      mouse: boolean
       /** Point de départ de la mesure de la prise : l'appui, ou le dernier changement de carte. */
       anchorX: number
       anchorY: number
@@ -22,7 +24,16 @@ export type GestureState =
       /** Appui sur la carte agrandie : elle reste désignée tant que le pointeur ne s'en éloigne pas. */
       pressed: boolean
     }
-  | { phase: 'holding'; pointerId: number; cardId: string; x: number; y: number; lineY: number; aboveLine: boolean }
+  | {
+      phase: 'holding'
+      pointerId: number
+      cardId: string
+      x: number
+      y: number
+      /** Ligne de cette prise : celle qui est affichée, et que le bas de la carte doit franchir. */
+      lineY: number
+      aboveLine: boolean
+    }
   | { phase: 'pending'; cardId: string; x: number; y: number }
 
 export type GestureEvent =
@@ -30,7 +41,7 @@ export type GestureEvent =
   | { type: 'hoverMove'; x: number; cardId?: string | undefined }
   | { type: 'leave' }
   /** `cardId` : appui directement sur la carte en emphase, qui reste alors désignée. */
-  | { type: 'down'; pointerId: number; x: number; y: number; cardId?: string | undefined }
+  | { type: 'down'; pointerId: number; x: number; y: number; cardId?: string | undefined; mouse?: boolean | undefined }
   | { type: 'move'; pointerId: number; x: number; y: number }
   | { type: 'up'; pointerId: number }
   | { type: 'cancel'; pointerId: number }
@@ -41,7 +52,7 @@ export type GestureEvent =
 export type GestureEffect =
   | { type: 'play'; cardId: string }
   | { type: 'refuse'; cardId: string }
-  /** Emphase posée par un appui, conservée après le lever du doigt (`null` : aucune). */
+  /** Emphase conservée après le relâchement : toucher, ou carte tirée puis relâchée sous la ligne (`null` : aucune). */
   | { type: 'select'; cardId: string | null }
 
 /** Ce que le réducteur lit de la situation au moment de l'événement. */
@@ -50,6 +61,8 @@ export interface GestureContext {
   slots: readonly FanSlot[]
   cardSize: CardSize
   lineY: number
+  /** Haut de l'écran dans le repère de la main : limite de la ligne de jeu. */
+  screenTop: number
   /** Carte en emphase conservée d'un geste précédent. */
   emphasizedId: string | null
   canPlay: (cardId: string) => boolean
@@ -94,14 +107,20 @@ function designate(x: number, currentId: string | null, ctx: GestureContext): st
   return index === null ? null : (ctx.cardIds[index] ?? null)
 }
 
+/** Une autre carte passe en emphase par survol ou clic : l'emphase conservée s'arrête. */
+function releaseKept(cardId: string, ctx: GestureContext): GestureEffect[] {
+  return ctx.emphasizedId !== null && ctx.emphasizedId !== cardId ? [{ type: 'select', cardId: null }] : []
+}
+
 export function reduceGesture(state: GestureState, event: GestureEvent, ctx: GestureContext): GestureResult {
   const unchanged: GestureResult = { state, effects: [] }
   switch (event.type) {
     case 'hoverMove': {
       if (state.phase !== 'idle' && state.phase !== 'hover') return unchanged
       const overId = event.cardId !== undefined && ctx.cardIds.includes(event.cardId) ? event.cardId : null
-      const cardId = overId ?? designate(event.x, state.phase === 'hover' ? state.cardId : null, ctx)
-      return { state: cardId === null ? IDLE : { phase: 'hover', cardId }, effects: [] }
+      const cardId = overId ?? designate(event.x, state.phase === 'hover' ? state.cardId : ctx.emphasizedId, ctx)
+      if (cardId === null) return { state: IDLE, effects: [] }
+      return { state: { phase: 'hover', cardId }, effects: releaseKept(cardId, ctx) }
     }
 
     case 'leave':
@@ -114,7 +133,7 @@ export function reduceGesture(state: GestureState, event: GestureEvent, ctx: Ges
       const cardId = pressedId ?? designate(event.x, state.phase === 'hover' ? state.cardId : ctx.emphasizedId, ctx)
       if (cardId === null) return unchanged
       return {
-        state: { phase: 'scrubbing', pointerId: event.pointerId, cardId, anchorX: event.x, anchorY: event.y, refused: false, pressed: pressedId !== null },
+        state: { phase: 'scrubbing', pointerId: event.pointerId, cardId, mouse: event.mouse === true, anchorX: event.x, anchorY: event.y, refused: false, pressed: pressedId !== null },
         effects: [],
       }
     }
@@ -135,7 +154,7 @@ export function reduceGesture(state: GestureState, event: GestureEvent, ctx: Ges
       const rise = state.anchorY - event.y
       if (rise <= PULL_THRESHOLD || rise <= Math.abs(event.x - state.anchorX)) return unchanged
       if (ctx.canPlay(state.cardId)) {
-        const lineY = holdLineY(ctx.lineY, state.anchorY)
+        const lineY = holdLineY(ctx.lineY, event.y, ctx.screenTop)
         return {
           state: {
             phase: 'holding',
@@ -155,6 +174,10 @@ export function reduceGesture(state: GestureState, event: GestureEvent, ctx: Ges
 
     case 'up': {
       if ((state.phase !== 'scrubbing' && state.phase !== 'holding') || state.pointerId !== event.pointerId) return unchanged
+      // Un clic à la souris ne retient rien : la carte reste en emphase parce qu'elle est survolée.
+      if (state.phase === 'scrubbing' && state.mouse) {
+        return { state: { phase: 'hover', cardId: state.cardId }, effects: releaseKept(state.cardId, ctx) }
+      }
       const select: GestureEffect = { type: 'select', cardId: state.cardId }
       if (state.phase === 'scrubbing' || !state.aboveLine) return { state: IDLE, effects: [select] }
       // La situation a pu changer depuis la prise (pause, tour) : on relit la légalité au relâchement.

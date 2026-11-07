@@ -109,7 +109,7 @@ export function useHandGesture(options: Options): HandGesture {
   const handlers = useRef<HandGesture['handlers']>({
     onPointerDown(e) {
       if (e.button !== 0) return
-      send({ type: 'down', pointerId: e.pointerId, ...point(e), cardId: cardUnder(e) })
+      send({ type: 'down', pointerId: e.pointerId, ...point(e), cardId: cardUnder(e), mouse: e.pointerType === 'mouse' })
       // Le pointeur reste suivi même s'il sort de la main ; le navigateur ne récupère pas le geste.
       if (stateRef.current.phase === 'scrubbing' && stateRef.current.pointerId === e.pointerId) {
         e.currentTarget.setPointerCapture(e.pointerId)

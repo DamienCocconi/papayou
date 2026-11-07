@@ -14,7 +14,7 @@ function centerOf(id: string): number {
 }
 
 function ctx(overrides: Partial<GestureContext> = {}): GestureContext {
-  return { cardIds: IDS, slots: SLOTS, cardSize: CARD_SIZE, lineY: LINE_Y, emphasizedId: null, canPlay: () => true, ...overrides }
+  return { cardIds: IDS, slots: SLOTS, cardSize: CARD_SIZE, lineY: LINE_Y, screenTop: -600, emphasizedId: null, canPlay: () => true, ...overrides }
 }
 
 /** Rejoue une suite d'événements et cumule les effets, comme le ferait le hook. */
@@ -61,9 +61,78 @@ describe('survol', () => {
     expect(gestureCardId(over.state)).toBe('d')
   })
 
-  it('ne pose pas la sélection : seul un appui le fait', () => {
+  it('ne pose pas la sélection', () => {
     const { effects } = run([{ type: 'hoverMove', x: X }, { type: 'hoverMove', x: centerOf('f') }, { type: 'leave' }])
     expect(effects).toEqual([])
+  })
+
+  describe('clic et emphase maintenue à la souris', () => {
+    const mouseDown = (x: number): GestureEvent => ({ type: 'down', pointerId: P, x, y: 40, mouse: true })
+
+    it('un clic sans tirer ne joue rien, ne retient rien, et la carte reste survolée', () => {
+      const { state, effects } = run([{ type: 'hoverMove', x: X }, mouseDown(X), up()])
+      expect(state).toEqual({ phase: 'hover', cardId: 'd' })
+      expect(effects).toEqual([])
+    })
+
+    it('après un clic, quitter la main retire l’emphase', () => {
+      expect(run([mouseDown(X), up(), { type: 'leave' }]).state).toEqual(IDLE)
+    })
+
+    it('le toucher, lui, retient la carte au lever du doigt', () => {
+      expect(run([down(X), up()]).effects).toEqual([{ type: 'select', cardId: 'd' }])
+    })
+
+    it('une carte tirée puis relâchée sous la ligne reste en emphase maintenue', () => {
+      const { state, effects } = run([mouseDown(X), move(X, 40 - PULL_THRESHOLD - 1), up()])
+      expect(state).toEqual(IDLE)
+      expect(effects).toEqual([{ type: 'select', cardId: 'd' }])
+    })
+
+    it('le survol d’une autre carte arrête l’emphase maintenue', () => {
+      const { effects } = run([{ type: 'hoverMove', x: centerOf('f') }], ctx({ emphasizedId: 'd' }))
+      expect(effects).toEqual([{ type: 'select', cardId: null }])
+    })
+
+    it('survoler ou cliquer la carte maintenue ne l’arrête pas', () => {
+      const context = ctx({ emphasizedId: 'd' })
+      expect(run([{ type: 'hoverMove', x: X }, { type: 'leave' }], context).effects).toEqual([])
+      expect(run([mouseDown(X), up()], context).effects).toEqual([])
+    })
+
+    it('garde la carte maintenue au retour de la souris, près de la frontière avec sa voisine', () => {
+      let x = X
+      while (gestureCardId(run([{ type: 'hoverMove', x }]).state) === 'd') x += 1
+      const { state, effects } = run([{ type: 'hoverMove', x }], ctx({ emphasizedId: 'd' }))
+      expect(gestureCardId(state)).toBe('d')
+      expect(effects).toEqual([])
+    })
+
+    it('une carte tirée puis relâchée au-dessus de la ligne est jouée, sans rester maintenue', () => {
+      const { effects } = run([mouseDown(X), move(X, 40 - PULL_THRESHOLD - 1), move(X, ABOVE), up()])
+      expect(effects).toEqual([
+        { type: 'select', cardId: null },
+        { type: 'play', cardId: 'd' },
+      ])
+    })
+
+    it('une carte refusée résiste, reste survolée et n’est pas retenue', () => {
+      const context = ctx({ canPlay: () => false })
+      const { state, effects } = run([mouseDown(X), move(X, 40 - PULL_THRESHOLD - 1), up()], context)
+      expect(state).toEqual({ phase: 'hover', cardId: 'd' })
+      expect(effects).toEqual([{ type: 'refuse', cardId: 'd' }])
+    })
+
+    it('une annulation laisse l’emphase maintenue intacte', () => {
+      const cancel: GestureEvent = { type: 'cancel', pointerId: P }
+      const { effects } = run([mouseDown(X), move(centerOf('f')), cancel], ctx({ emphasizedId: 'd' }))
+      expect(effects).toEqual([])
+    })
+
+    it('un clic après un balayage sur une autre carte arrête l’emphase maintenue', () => {
+      const { effects } = run([mouseDown(X), move(centerOf('f')), up()], ctx({ emphasizedId: 'd' }))
+      expect(effects).toEqual([{ type: 'select', cardId: null }])
+    })
   })
 
   it('est ignoré pendant un geste', () => {
@@ -195,11 +264,28 @@ describe('prise et relâchement', () => {
     expect(plays(effects)).toEqual([])
   })
 
-  it('remonte la ligne de cette prise, qu’il reste possible de franchir', () => {
+  it('remonte la ligne quand la carte est prise haut après une diagonale : elle n’est pas encore jouable', () => {
+    const atF = centerOf('f')
+    const taken = -150 - PULL_THRESHOLD - 1
+    const { state, effects } = run([down(centerOf('a')), move(atF, -150), move(atF, taken), up()])
+    expect(state).toEqual(IDLE)
+    expect(plays(effects)).toEqual([])
+    const held = run([down(centerOf('a')), move(atF, -150), move(atF, taken)]).state
+    expect(held).toMatchObject({ phase: 'holding', cardId: 'f', aboveLine: false, lineY: taken - 94 })
+  })
+
+  it('garde la ligne de l’écran quand la carte est prise assez bas', () => {
+    expect(run(TAKE).state).toMatchObject({ lineY: LINE_Y })
+  })
+
+  it('fixe la ligne à la prise, et le franchissement a lieu exactement à cette ligne', () => {
+    const y = LINE_Y - 30 - PULL_THRESHOLD - 1
     const press = down(X, LINE_Y - 30)
-    const taken = run([press, move(X, LINE_Y - 30 - PULL_THRESHOLD - 1)]).state
-    expect(taken).toMatchObject({ phase: 'holding', aboveLine: false })
-    const crossed = run([press, move(X, LINE_Y - 30 - PULL_THRESHOLD - 1), move(X, LINE_Y - 200), up()])
+    const taken = run([press, move(X, y)]).state
+    expect(taken).toMatchObject({ phase: 'holding', lineY: y - 94, aboveLine: false })
+    const moved = run([press, move(X, y), move(X, y - 69)]).state
+    expect(moved).toMatchObject({ lineY: y - 94, aboveLine: false })
+    const crossed = run([press, move(X, y), move(X, y - 71), up()])
     expect(plays(crossed.effects)).toEqual([{ type: 'play', cardId: 'd' }])
   })
 

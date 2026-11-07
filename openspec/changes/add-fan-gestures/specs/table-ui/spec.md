@@ -11,7 +11,15 @@ En éventail, le système SHALL mettre en emphase la carte désignée par le doi
 
 #### Scenario: Survol à la souris
 - **WHEN** le joueur déplace la souris sur la main sans cliquer
-- **THEN** la carte survolée passe en emphase, et l'emphase disparaît quand la souris quitte la main
+- **THEN** la carte survolée passe en emphase, et l'emphase disparaît quand la souris quitte la main, sauf emphase maintenue
+
+#### Scenario: Clic à la souris
+- **WHEN** le joueur clique sur une carte sans la tirer vers le haut
+- **THEN** rien n'est joué ni retenu : la carte reste en emphase tant qu'elle est survolée, et l'emphase disparaît quand la souris quitte la main
+
+#### Scenario: Emphase maintenue à la souris
+- **WHEN** le joueur tire une carte à la souris puis la relâche sous la ligne
+- **THEN** elle retourne en emphase et y reste quand la souris quitte la main, jusqu'à ce qu'une autre carte passe en emphase ou qu'il clique ailleurs que sur un bouton
 
 #### Scenario: Carte visible au-dessus du doigt
 - **WHEN** une carte est en emphase au doigt, y compris à une extrémité de la main
@@ -37,7 +45,7 @@ Le système SHALL écarter de part et d'autre de la carte en emphase ses cartes 
 - **THEN** l'emphase change de carte une seule fois par carte, sans revenir sans cesse entre deux cartes voisines
 
 ### Requirement: Jouer une carte en la tirant vers le haut
-En éventail, le système SHALL prendre une carte en main quand le joueur la tire vers le haut, la faire suivre son doigt ou sa souris et afficher une ligne de jeu. La relâcher au-dessus de cette ligne SHALL la jouer ; la relâcher en dessous SHALL la remettre dans la main. La position de la ligne SHALL dépendre de la hauteur de l'écran.
+En éventail, le système SHALL prendre une carte en main quand le joueur la tire vers le haut, la faire suivre son doigt ou sa souris et afficher une ligne de jeu. La relâcher au-dessus de cette ligne SHALL la jouer ; la relâcher en dessous SHALL la remettre dans la main. La position de la ligne SHALL dépendre de la hauteur de l'écran et de la position de la carte au moment de la prise, puis SHALL rester fixe jusqu'au relâchement.
 
 #### Scenario: Carte jouée
 - **WHEN** c'est le tour du joueur, qu'il tire une carte jouable au-dessus de la ligne et la relâche
@@ -50,6 +58,18 @@ En éventail, le système SHALL prendre une carte en main quand le joueur la tir
 #### Scenario: Signal avant de relâcher
 - **WHEN** la carte tenue passe au-dessus de la ligne
 - **THEN** son aspect change pour indiquer qu'elle sera jouée si on la relâche
+
+#### Scenario: Ligne fixée à la prise
+- **WHEN** le joueur prend une carte, au doigt ou à la souris, quel que soit le chemin suivi jusque-là
+- **THEN** la ligne apparaît au moins 70 px au-dessus du bas de la carte et à au moins 70 px du haut de l'écran, sans bouger jusqu'au relâchement
+
+#### Scenario: Petit coup
+- **WHEN** le joueur prend une carte puis la relâche sans l'avoir montée jusqu'à la ligne
+- **THEN** rien n'est joué
+
+#### Scenario: Prise près du haut d'un écran bas
+- **WHEN** la limite haute de la ligne ne laisse pas 70 px au-dessus du bas de la carte
+- **THEN** la limite haute l'emporte : l'écart est réduit, voire nul, et la carte reste jouable
 
 #### Scenario: Geste horizontal
 - **WHEN** le joueur déplace surtout le doigt horizontalement, même avec un léger mouvement vers le haut
