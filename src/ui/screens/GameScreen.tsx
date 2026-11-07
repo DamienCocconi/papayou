@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { Action, Suit } from '../../engine'
 import type { GameController } from '../controller/types'
@@ -21,6 +21,9 @@ interface Props {
   /** Actions d'administration, fournies seulement à l'hôte d'une salle en réseau. */
   admin?: AdminActions
 }
+
+/** Durée d'affichage du message de refus d'une carte. */
+const REFUSAL_DURATION_MS = 3000
 
 export function GameScreen({ controller, onQuit, admin }: Props) {
   const { view, legalPlays, session } = useGame(controller)
@@ -47,15 +50,33 @@ export function GameScreen({ controller, onQuit, admin }: Props) {
   const layout: HandLayout = giving ? 'spread' : layoutChoice
   const fan = layout === 'fan'
 
-  // La sélection de la main repart de zéro quand la phase, le tour ou le nombre de cartes change.
+  // La sélection de l'étalé repart de zéro quand la phase, le tour ou le nombre de cartes change.
   const resetKey = `${view.phase}-${view.roundIndex}-${view.tricksPlayed}-${view.trick.length}-${view.hand.length}`
 
   // Le moteur peut refuser une action (l'interface grise déjà les cartes illégales, mais on ne présume de rien).
   const [error, setError] = useState<string | null>(null)
-  function dispatch(action: Action) {
+  function dispatch(action: Action): boolean {
     const result = controller.dispatch(action)
     setError(result.ok ? null : roomErrorText(result.error))
+    return result.ok
   }
+
+  // Message court quand une carte tirée de l'éventail ne part pas. Il dit seulement ce que la vue et
+  // le moteur disent déjà (pause, tour, carte grisée) : aucune règle n'est énoncée ici.
+  // Un objet plutôt qu'un texte : le même message répété relance sa durée d'affichage.
+  const [refusal, setRefusal] = useState<{ text: string } | null>(null)
+  function refuse() {
+    if (paused) setRefusal({ text: roomErrorText('paused') })
+    else if (turn === null) setRefusal({ text: "Ce n'est pas le moment de jouer une carte." })
+    else setRefusal({ text: turn === me ? 'Cette carte ne peut pas être jouée.' : "Ce n'est pas à vous de jouer." })
+  }
+  useEffect(() => {
+    if (refusal === null) return
+    const timer = window.setTimeout(() => setRefusal(null), REFUSAL_DURATION_MS)
+    return () => window.clearTimeout(timer)
+  }, [refusal])
+  // La situation a changé : le message ne dit plus la vérité (le tour est peut-être arrivé).
+  useEffect(() => setRefusal(null), [resetKey])
 
   function status(): string {
     switch (view.phase) {
@@ -137,7 +158,7 @@ export function GameScreen({ controller, onQuit, admin }: Props) {
           </span>
         </div>
         <div className="status" role="status">
-          {error ?? (session?.error ? roomErrorText(session.error) : status())}
+          {refusal?.text ?? error ?? (session?.error ? roomErrorText(session.error) : status())}
         </div>
       </div>
 
@@ -169,6 +190,8 @@ export function GameScreen({ controller, onQuit, admin }: Props) {
           markedIds={marked}
           onPlay={(cardId) => dispatch({ type: 'playCard', seat: me, cardId })}
           onGive={(cardIds) => dispatch({ type: 'giveCards', seat: me, cardIds })}
+          onRefuse={refuse}
+          playRefusal={session?.error ? session.receivedAt : null}
         />
       </div>
     </div>

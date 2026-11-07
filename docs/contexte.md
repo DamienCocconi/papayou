@@ -60,7 +60,7 @@ Le second but compte autant que le premier. Il vaut mieux un workflow propre et 
    - `add-fan-layout` : main en arc en bas d'un écran fixe, affichage étalé conservé et choix mémorisé sur l'appareil, coin des cartes lisible quand elles se chevauchent, résumé du dernier pli. Premier réglage stocké en `localStorage`.
    - `add-fan-gestures` : balayage, emphase de la carte sous le doigt et glissement vers le haut pour jouer.
    - `add-gift-slots` : trois emplacements pour l'échange, qui retire l'affichage étalé forcé pendant le don.
-6. **Finitions** : PWA, Wake Lock, ergonomie tactile, glisser-déposer, assets graphiques des cartes (figures roi, dame, cavalier, valet dessinées sur mesure, dans un changement dédié).
+6. **Finitions** : PWA, Wake Lock, assets graphiques des cartes (figures roi, dame, cavalier, valet dessinées sur mesure, dans un changement dédié). L'ergonomie tactile et le glisser-déposer sont traités par la main en éventail (`add-fan-gestures`, puis `add-gift-slots` pour l'échange).
 
 Chaque étape fait l'objet d'un changement OpenSpec distinct.
 

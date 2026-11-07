@@ -2,7 +2,7 @@
 
 Idées recueillies en testant le jeu, pas encore arbitrées. Ce fichier n'est pas la feuille de route : celle-ci (étapes décidées) est dans `contexte.md`. Une idée sort d'ici quand elle devient un changement OpenSpec (`/opsx:propose`), et on la raye alors avec le nom du change.
 
-Dernière mise à jour : 2026-10-20.
+Dernière mise à jour : 2026-11-07.
 
 ## Vue d'ensemble
 
@@ -22,6 +22,7 @@ Dernière mise à jour : 2026-10-20.
 | 12 | Délai avant le pli suivant | UX | Rythme du pli |
 | 13 | Animation du pli vers le gagnant | UX | Rythme du pli |
 | 14 | Remplacer un bot pendant l'échange : cartes à désélectionner | Bug | Salle et accueil |
+| 15 | Éventail : double clic ou double appui pour jouer la carte en emphase | UX | Main en éventail |
 
 Les regroupements sont des pistes pour découper en changements OpenSpec, pas des décisions.
 
@@ -109,6 +110,12 @@ Contre des bots, un petit délai sépare la pose de deux cartes, mais pas la der
 ### 13. Animation de ramassage
 
 Une fois la dernière carte posée, un effet visuel montre que le pli et ses points vont à tel joueur : un mouvement du pli sur la table vers l'emplacement du joueur qui le remporte.
+
+## Main en éventail
+
+### 15. Double clic ou double appui pour jouer
+
+En mode éventail, un double clic ou un double appui tactile sur la carte en emphase joue la carte, comme si on l'avait jouée en la glissant.
 
 ## Scores en cours de partie
 
