@@ -10,8 +10,11 @@ interface Options {
   containerRef: RefObject<HTMLElement>
   /** Situation à jour : relue à chaque événement du pointeur. */
   context: GestureContext
-  /** Renvoie faux si le coup est refusé tout de suite. */
-  onPlay: (cardId: string) => boolean
+  /**
+   * Carte relâchée au-dessus de la ligne. Renvoie vrai si elle attend une réponse (coup envoyé) ; faux si
+   * l'affaire est réglée tout de suite (coup refusé, ou carte placée dans un emplacement).
+   */
+  onRelease: (cardId: string) => boolean
   onRefuse: (cardId: string) => void
   onSelect: (cardId: string | null) => void
   /** Déplace la carte tenue : appelé à chaque mouvement, sans passer par un rendu React. */
@@ -56,7 +59,7 @@ export function useHandGesture(options: Options): HandGesture {
   })
 
   const send = useCallback((event: GestureEvent) => {
-    const { context, onPlay, onRefuse, onSelect, onHeldMove } = latest.current
+    const { context, onRelease, onRefuse, onSelect, onHeldMove } = latest.current
     const before = stateRef.current
     const { state, effects } = reduceGesture(before, event, context)
     stateRef.current = state
@@ -70,9 +73,9 @@ export function useHandGesture(options: Options): HandGesture {
         case 'refuse':
           onRefuse(effect.cardId)
           break
-        case 'play':
-          // Refus immédiat (contrôleur local) : la carte n'attend pas.
-          if (!onPlay(effect.cardId)) send({ type: 'settled' })
+        case 'release':
+          // Refus immédiat (contrôleur local) ou carte placée : la carte n'attend pas.
+          if (!onRelease(effect.cardId)) send({ type: 'settled' })
           break
       }
     }

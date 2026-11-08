@@ -59,7 +59,7 @@ Le second but compte autant que le premier. Il vaut mieux un workflow propre et 
 5. **Main en éventail** (ergonomie tactile), en trois changements qui se suivent, chacun livrable seul :
    - `add-fan-layout` : main en arc en bas d'un écran fixe, affichage étalé conservé et choix mémorisé sur l'appareil, coin des cartes lisible quand elles se chevauchent, résumé du dernier pli. Premier réglage stocké en `localStorage`.
    - `add-fan-gestures` : balayage, emphase de la carte sous le doigt et glissement vers le haut pour jouer.
-   - `add-gift-slots` : trois emplacements pour l'échange, qui retire l'affichage étalé forcé pendant le don.
+   - `add-gift-slots` : trois emplacements pour l'échange en éventail, remplis en tirant les cartes vers le haut, avec un bouton de retrait sous chaque carte. Le choix du don est une seule donnée partagée avec l'étalé, qui n'est plus forcé pendant l'échange.
 6. **Finitions** : PWA, Wake Lock, assets graphiques des cartes (figures roi, dame, cavalier, valet dessinées sur mesure, dans un changement dédié). L'ergonomie tactile et le glisser-déposer sont traités par la main en éventail (`add-fan-gestures`, puis `add-gift-slots` pour l'échange).
 
 Chaque étape fait l'objet d'un changement OpenSpec distinct.
