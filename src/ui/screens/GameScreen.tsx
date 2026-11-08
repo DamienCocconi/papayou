@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
+import { GIFT_SIZE } from '../../engine'
 import type { Action, Suit } from '../../engine'
 import type { GameController } from '../controller/types'
 import { GameEnd } from '../components/GameEnd'
+import { GiftSlots } from '../components/GiftSlots'
 import { Hand } from '../components/Hand'
 import { LastTrick } from '../components/LastTrick'
 import { AdminMenu, PauseBanner } from '../components/NetworkPanels'
@@ -10,8 +12,10 @@ import type { AdminActions } from '../components/NetworkPanels'
 import { PapayouPicker } from '../components/PapayouPicker'
 import { RoundEnd } from '../components/RoundEnd'
 import { Table } from '../components/Table'
+import { hasRoom, ids, isComplete } from '../hand/giftDraft'
 import { browserStorage, readLayout, writeLayout } from '../hand/layoutPreference'
 import type { HandLayout } from '../hand/layoutPreference'
+import { useGiftDraft } from '../hand/useGiftDraft'
 import { playerName, roomErrorText, seatNames, SUIT_NAME, SUIT_SYMBOL, turnSeat } from '../labels'
 import { useGame } from '../useGame'
 
@@ -24,6 +28,8 @@ interface Props {
 
 /** Durée d'affichage du message de refus d'une carte. */
 const REFUSAL_DURATION_MS = 3000
+/** Sans réponse de l'hôte après ce délai, le don redevient modifiable. */
+const GIFT_SENDING_TIMEOUT_MS = 5000
 
 export function GameScreen({ controller, onQuit, admin }: Props) {
   const { view, legalPlays, session } = useGame(controller)
@@ -45,13 +51,67 @@ export function GameScreen({ controller, onQuit, admin }: Props) {
     setLayoutChoice(next)
     writeLayout(browserStorage(), next)
   }
-  // Tant que le joueur doit choisir ses cartes à donner, la main s'affiche étalée sans toucher à son choix.
-  const giving = view.phase === 'exchange' && view.myGift === null
-  const layout: HandLayout = giving ? 'spread' : layoutChoice
+  const layout: HandLayout = layoutChoice
   const fan = layout === 'fan'
+  const exchange = view.phase === 'exchange'
 
   // La sélection de l'étalé repart de zéro quand la phase, le tour ou le nombre de cartes change.
   const resetKey = `${view.phase}-${view.roundIndex}-${view.tricksPlayed}-${view.trick.length}-${view.hand.length}`
+
+  // Choix du don, partagé par la main (étalé et éventail) et les emplacements : il survit aux changements
+  // d'affichage et à une pause, et repart de zéro à la manche suivante.
+  const gift = useGiftDraft(resetKey)
+
+  // Don en cours d'envoi : chez l'invité, « envoyé » ne veut pas dire « accepté ». Tant que l'hôte n'a
+  // pas confirmé (`myGift` rempli), on empêche de le modifier ou de l'envoyer deux fois. Un refus de
+  // l'hôte, ou l'absence de réponse, rend le choix modifiable.
+  const [sending, setSending] = useState(false)
+  const remoteRefusal = session?.error ? session.receivedAt : null
+  useEffect(() => {
+    if (view.myGift !== null) setSending(false)
+  }, [view.myGift])
+  useEffect(() => {
+    if (remoteRefusal !== null) setSending(false)
+  }, [remoteRefusal])
+  useEffect(() => {
+    if (!sending) return
+    const timer = window.setTimeout(() => setSending(false), GIFT_SENDING_TIMEOUT_MS)
+    return () => window.clearTimeout(timer)
+  }, [sending])
+  const giftSending = sending && view.myGift === null
+
+  // En pause, ou pendant l'envoi du don, rien n'est modifiable.
+  const giving = exchange && view.myGift === null && !giftSending
+  const handMode = paused ? 'view' : giving ? 'give' : view.phase === 'playing' ? 'play' : 'view'
+
+  // Pendant l'échange : cartes choisies, puis données. Hors de l'échange, `myGift` reste rempli mais
+  // ne concerne plus la main.
+  const giftIds = useMemo(
+    () => (!exchange ? undefined : view.myGift !== null ? view.myGift.map((c) => c.id) : ids(gift.draft)),
+    [exchange, view.myGift, gift.draft],
+  )
+  const giftSlots = useMemo(() => {
+    if (view.myGift !== null) return view.myGift
+    return gift.draft.map((id) => view.hand.find((card) => card.id === id) ?? null)
+  }, [view.myGift, view.hand, gift.draft])
+
+  function give() {
+    if (!isComplete(gift.draft)) return
+    if (dispatch({ type: 'giveCards', seat: me, cardIds: ids(gift.draft) })) setSending(true)
+  }
+
+  // Destination d'une carte tirée au-dessus de la ligne : le pli, ou le premier emplacement libre.
+  function canRelease(cardId: string): boolean {
+    if (handMode === 'play') return playableIds.has(cardId)
+    return handMode === 'give' && hasRoom(gift.draft)
+  }
+  function release(cardId: string): boolean {
+    if (handMode === 'give') {
+      gift.add(cardId)
+      return false
+    }
+    return dispatch({ type: 'playCard', seat: me, cardId })
+  }
 
   // Le moteur peut refuser une action (l'interface grise déjà les cartes illégales, mais on ne présume de rien).
   const [error, setError] = useState<string | null>(null)
@@ -65,9 +125,16 @@ export function GameScreen({ controller, onQuit, admin }: Props) {
   // le moteur disent déjà (pause, tour, carte grisée) : aucune règle n'est énoncée ici.
   // Un objet plutôt qu'un texte : le même message répété relance sa durée d'affichage.
   const [refusal, setRefusal] = useState<{ text: string } | null>(null)
+  // Réaction des emplacements pleins : change à chaque refus, même répété.
+  const [fullBump, setFullBump] = useState<number | null>(null)
   function refuse() {
     if (paused) setRefusal({ text: roomErrorText('paused') })
-    else if (turn === null) setRefusal({ text: "Ce n'est pas le moment de jouer une carte." })
+    else if (exchange) {
+      if (handMode === 'give') {
+        setRefusal({ text: `Les ${GIFT_SIZE} emplacements sont pleins.` })
+        setFullBump((n) => (n ?? 0) + 1)
+      } else setRefusal({ text: giftSending ? 'Votre don est en cours d’envoi.' : 'Votre don est déjà parti.' })
+    } else if (turn === null) setRefusal({ text: "Ce n'est pas le moment de jouer une carte." })
     else setRefusal({ text: turn === me ? 'Cette carte ne peut pas être jouée.' : "Ce n'est pas à vous de jouer." })
   }
   useEffect(() => {
@@ -81,6 +148,7 @@ export function GameScreen({ controller, onQuit, admin }: Props) {
   function status(): string {
     switch (view.phase) {
       case 'exchange': {
+        if (giftSending) return 'Envoi du don…'
         if (view.myGift === null) return 'Choisissez 3 cartes à donner au joueur suivant.'
         const waiting = view.hasGiven.flatMap((given, seat) => (given ? [] : [playerName(seat, me, names)]))
         return `Don fait. En attente de : ${waiting.join(', ')}.`
@@ -98,10 +166,6 @@ export function GameScreen({ controller, onQuit, admin }: Props) {
         return 'Partie terminée.'
     }
   }
-
-  const handMode =
-    paused ? 'view' : view.phase === 'exchange' && view.myGift === null ? 'give' : view.phase === 'playing' ? 'play' : 'view'
-  const marked = useMemo(() => new Set((view.myGift ?? []).map((c) => c.id)), [view.myGift])
 
   const adminPanel =
     admin !== undefined && session !== null && adminOpen ? (
@@ -123,7 +187,7 @@ export function GameScreen({ controller, onQuit, admin }: Props) {
   const hasEndPanel = view.phase === 'roundEnd' || view.phase === 'gameEnd'
 
   return (
-    <div className={`game${fan ? ' fan' : ''}`}>
+    <div className={`game${fan ? ' fan' : ''}${exchange ? ' exchange' : ''}`}>
       <div className="head">
         <div className="topbar">
           <span className="badge">
@@ -136,17 +200,15 @@ export function GameScreen({ controller, onQuit, admin }: Props) {
             </span>
           )}
           <span className="topbar-actions">
-            {!giving && (
-              <button
-                type="button"
-                className="btn secondary icon-btn"
-                aria-label={fan ? 'Afficher la main étalée' : 'Afficher la main en éventail'}
-                title={fan ? 'Main étalée' : 'Main en éventail'}
-                onClick={toggleLayout}
-              >
-                {fan ? <GridIcon /> : <FanIcon />}
-              </button>
-            )}
+            <button
+              type="button"
+              className="btn secondary icon-btn"
+              aria-label={fan ? 'Afficher la main étalée' : 'Afficher la main en éventail'}
+              title={fan ? 'Main étalée' : 'Main en éventail'}
+              onClick={toggleLayout}
+            >
+              {fan ? <GridIcon /> : <FanIcon />}
+            </button>
             {admin !== undefined && session !== null && (
               <button type="button" className="btn secondary" onClick={() => setAdminOpen((open) => !open)}>
                 Administration
@@ -172,6 +234,15 @@ export function GameScreen({ controller, onQuit, admin }: Props) {
           {view.phase === 'choosePapayou' && view.roundLeader === me && (
             <PapayouPicker onPick={(suit: Suit) => dispatch({ type: 'choosePapayou', seat: me, suit })} />
           )}
+          {fan && exchange && (
+            <GiftSlots
+              slots={giftSlots}
+              locked={handMode !== 'give'}
+              onRemove={gift.remove}
+              onGive={give}
+              fullBump={fullBump}
+            />
+          )}
           {!fan && endPanels}
           <LastTrick view={view} names={names} compact={fan} />
         </div>
@@ -187,11 +258,13 @@ export function GameScreen({ controller, onQuit, admin }: Props) {
           layout={layout}
           resetKey={resetKey}
           playableIds={playableIds}
-          markedIds={marked}
-          onPlay={(cardId) => dispatch({ type: 'playCard', seat: me, cardId })}
-          onGive={(cardIds) => dispatch({ type: 'giveCards', seat: me, cardIds })}
+          giftIds={giftIds}
+          onToggleGift={gift.toggle}
+          onGive={give}
+          canRelease={canRelease}
+          onRelease={release}
           onRefuse={refuse}
-          playRefusal={session?.error ? session.receivedAt : null}
+          playRefusal={remoteRefusal}
         />
       </div>
     </div>

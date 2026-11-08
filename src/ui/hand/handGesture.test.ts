@@ -40,7 +40,7 @@ const TAKE: GestureEvent[] = [down(X), move(X, 40 - PULL_THRESHOLD - 1)]
 const ABOVE = LINE_Y - 10
 const BELOW = LINE_Y + 100
 
-const plays = (effects: GestureEffect[]) => effects.filter((e) => e.type === 'play')
+const releases = (effects: GestureEffect[]) => effects.filter((e) => e.type === 'release')
 const refusals = (effects: GestureEffect[]) => effects.filter((e) => e.type === 'refuse')
 
 describe('survol', () => {
@@ -112,7 +112,7 @@ describe('survol', () => {
       const { effects } = run([mouseDown(X), move(X, 40 - PULL_THRESHOLD - 1), move(X, ABOVE), up()])
       expect(effects).toEqual([
         { type: 'select', cardId: null },
-        { type: 'play', cardId: 'd' },
+        { type: 'release', cardId: 'd' },
       ])
     })
 
@@ -185,7 +185,7 @@ describe('balayage', () => {
   it('deux touchers sur la même carte ne jouent rien', () => {
     const { state, effects } = run([down(X), up(), down(X), up()], ctx({ emphasizedId: 'd' }))
     expect(state).toEqual(IDLE)
-    expect(plays(effects)).toEqual([])
+    expect(releases(effects)).toEqual([])
   })
 
   describe('appui sur la carte agrandie', () => {
@@ -209,7 +209,7 @@ describe('balayage', () => {
               const press: GestureEvent = { type: 'down', pointerId: P, x, y: -50, cardId }
               const { state, effects } = run([press, move(x, -90), move(x, -300), up()], context)
               expect(state).toMatchObject({ phase: 'pending', cardId })
-              expect(plays(effects)).toEqual([{ type: 'play', cardId }])
+              expect(releases(effects)).toEqual([{ type: 'release', cardId }])
             }
           })
         })
@@ -248,7 +248,7 @@ describe('prise et relâchement', () => {
   it('joue la carte relâchée au-dessus de la ligne, et attend la réponse à sa position', () => {
     const { state, effects } = run([...TAKE, move(X, ABOVE), up()])
     expect(state).toEqual({ phase: 'pending', cardId: 'd', x: X, y: ABOVE })
-    expect(plays(effects)).toEqual([{ type: 'play', cardId: 'd' }])
+    expect(releases(effects)).toEqual([{ type: 'release', cardId: 'd' }])
   })
 
   it('remet dans la main la carte relâchée sous la ligne, sans rien jouer', () => {
@@ -261,7 +261,7 @@ describe('prise et relâchement', () => {
     const press = down(X, LINE_Y - 30)
     const { state, effects } = run([press, move(X, LINE_Y - 30 - PULL_THRESHOLD - 1), up()])
     expect(state).toEqual(IDLE)
-    expect(plays(effects)).toEqual([])
+    expect(releases(effects)).toEqual([])
   })
 
   it('remonte la ligne quand la carte est prise haut après une diagonale : elle n’est pas encore jouable', () => {
@@ -269,7 +269,7 @@ describe('prise et relâchement', () => {
     const taken = -150 - PULL_THRESHOLD - 1
     const { state, effects } = run([down(centerOf('a')), move(atF, -150), move(atF, taken), up()])
     expect(state).toEqual(IDLE)
-    expect(plays(effects)).toEqual([])
+    expect(releases(effects)).toEqual([])
     const held = run([down(centerOf('a')), move(atF, -150), move(atF, taken)]).state
     expect(held).toMatchObject({ phase: 'holding', cardId: 'f', aboveLine: false, lineY: taken - 94 })
   })
@@ -286,11 +286,11 @@ describe('prise et relâchement', () => {
     const moved = run([press, move(X, y), move(X, y - 69)]).state
     expect(moved).toMatchObject({ lineY: y - 94, aboveLine: false })
     const crossed = run([press, move(X, y), move(X, y - 71), up()])
-    expect(plays(crossed.effects)).toEqual([{ type: 'play', cardId: 'd' }])
+    expect(releases(crossed.effects)).toEqual([{ type: 'release', cardId: 'd' }])
   })
 
   it('ne joue pas si le pointeur est revenu sous la ligne avant de relâcher', () => {
-    expect(plays(run([...TAKE, move(X, ABOVE), move(X, BELOW), up()]).effects)).toEqual([])
+    expect(releases(run([...TAKE, move(X, ABOVE), move(X, BELOW), up()]).effects)).toEqual([])
   })
 })
 
@@ -384,7 +384,7 @@ describe('interruptions', () => {
     expect(state).toEqual(before)
     expect(effects).toEqual([])
     // Le geste du premier doigt continue normalement.
-    expect(plays(run([up()], ctx(), state).effects)).toEqual([{ type: 'play', cardId: 'd' }])
+    expect(releases(run([up()], ctx(), state).effects)).toEqual([{ type: 'release', cardId: 'd' }])
   })
 
   it('ignore un second pointeur pendant le balayage', () => {
@@ -396,7 +396,7 @@ describe('interruptions', () => {
     const before = run([...TAKE, move(X, ABOVE)]).state
     const { state, effects } = run([up()], ctx({ canPlay: () => false }), before)
     expect(state).toEqual(IDLE)
-    expect(plays(effects)).toEqual([])
+    expect(releases(effects)).toEqual([])
     expect(refusals(effects)).toEqual([{ type: 'refuse', cardId: 'd' }])
   })
 

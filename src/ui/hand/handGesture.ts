@@ -1,7 +1,8 @@
 /**
  * États du geste sur l'éventail, dans un réducteur pur (l'équivalent d'une machine à états) :
  * un état et un événement donnent un nouvel état et des effets à exécuter, que le hook applique.
- * Aucune règle du jeu ici : la légalité arrive par `canPlay`, construite à partir de `legalPlays`.
+ * Aucune règle du jeu ici, ni de destination : `canPlay` dit si la carte peut partir (coup légal en phase
+ * de jeu, place libre pendant l'échange), et l'effet `release` laisse l'écran décider de ce qu'elle devient.
  */
 import { designateCard, holdLineY, isAboveLine } from './emphasis'
 import type { CardSize } from './emphasis'
@@ -50,7 +51,8 @@ export type GestureEvent =
   | { type: 'settled' }
 
 export type GestureEffect =
-  | { type: 'play'; cardId: string }
+  /** Carte relâchée au-dessus de la ligne : jouée, ou placée dans un emplacement d'échange. */
+  | { type: 'release'; cardId: string }
   | { type: 'refuse'; cardId: string }
   /** Emphase conservée après le relâchement : toucher, ou carte tirée puis relâchée sous la ligne (`null` : aucune). */
   | { type: 'select'; cardId: string | null }
@@ -65,6 +67,7 @@ export interface GestureContext {
   screenTop: number
   /** Carte en emphase conservée d'un geste précédent. */
   emphasizedId: string | null
+  /** Vrai si la carte peut partir de la main maintenant. */
   canPlay: (cardId: string) => boolean
 }
 
@@ -186,7 +189,7 @@ export function reduceGesture(state: GestureState, event: GestureEvent, ctx: Ges
         state: { phase: 'pending', cardId: state.cardId, x: state.x, y: state.y },
         effects: [
           { type: 'select', cardId: null },
-          { type: 'play', cardId: state.cardId },
+          { type: 'release', cardId: state.cardId },
         ],
       }
     }

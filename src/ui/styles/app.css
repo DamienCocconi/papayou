@@ -159,6 +159,25 @@ html:has(.game.fan), body:has(.game.fan) { overflow: hidden; overscroll-behavior
 .game.fan .center { gap: 8px; }
 .last-trick-summary { padding: 4px 10px; font-size: 0.85rem; }
 
+/* Emplacements du don en éventail */
+.gift-slots { --card-w: 56px; --card-h: 84px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.gift-row { display: flex; gap: 10px; }
+.gift-row.bump { animation: gift-full 0.35s ease; }
+@keyframes gift-full { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+.gift-slot { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.gift-place { width: var(--card-w); height: var(--card-h); border-radius: 6px; }
+.gift-place.empty { border: 2px dashed rgba(244, 244, 240, 0.7); background: rgba(0, 0, 0, 0.18); }
+/* Zone tactile d'environ 40 px pour un petit bouton. */
+.gift-remove {
+  width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--muted); border-radius: 50%; background: var(--felt-dark); color: #f4f4f0;
+}
+/* Sans emplacements de carte à remplir pendant l'échange, la table laisse la place aux emplacements du don. */
+.game.fan.exchange .seat .slot { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .gift-row.bump { animation: none; }
+}
+
 /* Surcouche des panneaux, avec défilement interne si le panneau est trop haut. */
 .overlay {
   position: absolute; inset: 0; z-index: 20; overflow-y: auto; display: flex; padding: 6px;
@@ -186,6 +205,8 @@ html:has(.game.fan), body:has(.game.fan) { overflow: hidden; overscroll-behavior
   /* L'espace libre entre la table et la main est réparti autour de la table, et la main remonte. */
   .game.fan .stage { justify-content: center; }
   .game.fan .hand-zone { padding-bottom: 22px; }
+  /* Le bouton de don passe à droite des emplacements pour économiser la hauteur. */
+  .gift-slots { flex-direction: row; gap: 12px; }
   .overlay .panel ul { columns: 2; column-gap: 24px; margin: 4px 0; }
   .overlay .panel h3 { margin-bottom: 4px; }
 }

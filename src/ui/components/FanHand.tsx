@@ -13,27 +13,33 @@ import { CardView } from './CardView'
 
 interface Props {
   cards: readonly Card[]
-  /** Dit si une carte peut être jouée : lu au moment de la prise, puis du relâchement. */
+  /** Destination des cartes relâchées au-dessus de la ligne : le pli, ou les emplacements d'échange. */
+  purpose: 'play' | 'gift'
+  /** Dit si une carte peut partir : lu au moment de la prise, puis du relâchement. */
   canPlay: (cardId: string) => boolean
   /** Une carte grisée reste lisible, mais se distingue des autres. */
   isDisabled: (cardId: string) => boolean
-  markedIds?: ReadonlySet<string> | undefined
   /** Carte en emphase conservée d'un geste à l'autre : c'est la sélection de `Hand`. */
   emphasizedId: string | null
   onSelect: (cardId: string | null) => void
-  /** Renvoie faux si le coup est refusé tout de suite. */
-  onPlay: (cardId: string) => boolean
+  /** Renvoie vrai si la carte attend une réponse (coup envoyé), faux si c'est réglé tout de suite. */
+  onRelease: (cardId: string) => boolean
   onRefuse: (cardId: string) => void
   /** Change à chaque refus de l'hôte, même s'il répète le précédent (null : aucun). */
   remoteRefusal: number | null
 }
+
+const HOLD_LABELS = {
+  play: { blocked: 'Cette carte ne peut plus être jouée', ready: 'Relâchez pour jouer', pull: 'Tirez au-dessus de la ligne pour jouer' },
+  gift: { blocked: 'Cette carte ne peut pas être placée', ready: 'Relâchez pour placer la carte', pull: 'Tirez au-dessus de la ligne pour donner' },
+} as const
 
 function transformOf(slot: DisplayedSlot): string {
   return `translate(${slot.x}px, ${slot.y}px) rotate(${slot.rotation}deg) scale(${slot.scale})`
 }
 
 /** Main en éventail, pilotée par le geste : le conteneur reçoit le pointeur, pas chaque carte. */
-export function FanHand({ cards, canPlay, isDisabled, markedIds, emphasizedId, onSelect, onPlay, onRefuse, remoteRefusal }: Props) {
+export function FanHand({ cards, purpose, canPlay, isDisabled, emphasizedId, onSelect, onRelease, onRefuse, remoteRefusal }: Props) {
   const [containerRef, width] = useElementWidth<HTMLDivElement>(true)
   const viewport = useViewportSize()
   const scale = fanScale(viewport.width, viewport.height)
@@ -77,7 +83,7 @@ export function FanHand({ cards, canPlay, isDisabled, markedIds, emphasizedId, o
       emphasizedId,
       canPlay,
     },
-    onPlay,
+    onRelease,
     onRefuse,
     onSelect,
     onHeldMove: (x, y) => {
@@ -108,11 +114,7 @@ export function FanHand({ cards, canPlay, isDisabled, markedIds, emphasizedId, o
   // La situation peut changer pendant la prise (pause) : le signal ne promet pas un coup qui sera refusé.
   const stillPlayable = state.phase === 'holding' && canPlay(state.cardId)
   const willPlay = state.phase === 'holding' && state.aboveLine && stillPlayable
-  const holdLabel = !stillPlayable
-    ? 'Cette carte ne peut plus être jouée'
-    : willPlay
-      ? 'Relâchez pour jouer'
-      : 'Tirez au-dessus de la ligne pour jouer'
+  const holdLabel = HOLD_LABELS[purpose][!stillPlayable ? 'blocked' : willPlay ? 'ready' : 'pull']
 
   return (
     <div
@@ -165,7 +167,7 @@ export function FanHand({ cards, canPlay, isDisabled, markedIds, emphasizedId, o
               data-card-id={emphasized ? card.id : undefined}
               style={{ transform: transformOf(shown), zIndex: emphasized || free ? 1000 : i + 1 }}
             >
-              <CardView card={card} selected={markedIds?.has(card.id) === true} disabled={isDisabled(card.id)} />
+              <CardView card={card} disabled={isDisabled(card.id)} />
             </div>
           )
         })}
