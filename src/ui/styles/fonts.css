@@ -1,0 +1,17 @@
+/* Police des atouts illustrés (IM Fell English SC, licence OFL), embarquée dans le site via @fontsource.
+   Les métriques verticales sont imposées : sans cela, Windows et Android lisent des valeurs différentes
+   dans le fichier et le texte ne tombe pas au même endroit selon l'appareil. Avec une ascendante de 0,85 em
+   et une descendante de 0,15 em, les majuscules (encre de 0 à 0,72 em au-dessus de la ligne de base)
+   sont centrées dans une ligne de hauteur 1. */
+@font-face {
+  font-family: 'Papayou Fell';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src:
+    url('@fontsource/im-fell-english-sc/files/im-fell-english-sc-latin-400-normal.woff2') format('woff2'),
+    url('@fontsource/im-fell-english-sc/files/im-fell-english-sc-latin-400-normal.woff') format('woff');
+  ascent-override: 85%;
+  descent-override: 15%;
+  line-gap-override: 0%;
+}
