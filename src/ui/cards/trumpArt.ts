@@ -4,11 +4,13 @@ import placeholderFeast from '../assets/trumps/placeholder-feast.webp'
 import placeholderTower from '../assets/trumps/placeholder-tower.webp'
 import trump01 from '../assets/trumps/trump-01.webp'
 import trump04 from '../assets/trumps/trump-04.webp'
+import trump05 from '../assets/trumps/trump-05.webp'
 import trump09 from '../assets/trumps/trump-09.webp'
 import trump10 from '../assets/trumps/trump-10.webp'
 import trump11 from '../assets/trumps/trump-11.webp'
 import trump12 from '../assets/trumps/trump-12.webp'
 import trump14 from '../assets/trumps/trump-14.webp'
+import trump16 from '../assets/trumps/trump-16.webp'
 import trump21 from '../assets/trumps/trump-21.webp'
 
 export interface TrumpArt {
@@ -31,7 +33,7 @@ export const TRUMP_ART: TrumpArtTable = {
   2: { title: 'Le pont', image: placeholderTower },
   3: { title: 'Le partage', image: placeholderFeast },
   4: { title: 'La Calédonie', image: trump04 },
-  5: { title: "L'atelier", image: placeholderFeast },
+  5: { title: "L'abus", image: trump05 },
   6: { title: 'Le marché', image: placeholderTower },
   7: { title: 'Le phare', image: placeholderFeast },
   8: { title: 'La moisson', image: placeholderTower },
@@ -42,7 +44,7 @@ export const TRUMP_ART: TrumpArtTable = {
   13: { title: 'Le jardin', image: placeholderFeast },
   14: { title: 'Le Référentiel', image: trump14 },
   15: { title: 'La fête', image: placeholderFeast },
-  16: { title: 'La tour', image: placeholderTower },
+  16: { title: 'Le happy hour', image: trump16 },
   17: { title: 'Le moulin', image: placeholderFeast },
   18: { title: 'La lune', image: placeholderTower },
   19: { title: 'Le soleil', image: placeholderFeast },
