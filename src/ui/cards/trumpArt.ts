@@ -3,14 +3,18 @@ import type { Card } from '../../engine'
 import placeholderFeast from '../assets/trumps/placeholder-feast.webp'
 import placeholderTower from '../assets/trumps/placeholder-tower.webp'
 import trump01 from '../assets/trumps/trump-01.webp'
+import trump02 from '../assets/trumps/trump-02.webp'
+import trump03 from '../assets/trumps/trump-03.webp'
 import trump04 from '../assets/trumps/trump-04.webp'
 import trump05 from '../assets/trumps/trump-05.webp'
+import trump07 from '../assets/trumps/trump-07.webp'
 import trump09 from '../assets/trumps/trump-09.webp'
 import trump10 from '../assets/trumps/trump-10.webp'
 import trump11 from '../assets/trumps/trump-11.webp'
 import trump12 from '../assets/trumps/trump-12.webp'
 import trump14 from '../assets/trumps/trump-14.webp'
 import trump16 from '../assets/trumps/trump-16.webp'
+import trump17 from '../assets/trumps/trump-17.webp'
 import trump21 from '../assets/trumps/trump-21.webp'
 
 export interface TrumpArt {
@@ -30,12 +34,12 @@ export type TrumpArtTable = Readonly<Partial<Record<number, TrumpArt>>>
 // Retirer une ligne rend à l'atout l'affichage non illustré. Mode d'emploi complet : docs/illustrations-atouts.md.
 export const TRUMP_ART: TrumpArtTable = {
   1: { title: 'La tour', image: trump01 },
-  2: { title: 'Le pont', image: placeholderTower },
-  3: { title: 'Le partage', image: placeholderFeast },
+  2: { title: 'La Vérité', image: trump02 },
+  3: { title: 'Le pikamole', image: trump03 },
   4: { title: 'La Calédonie', image: trump04 },
   5: { title: "L'abus", image: trump05 },
   6: { title: 'Le marché', image: placeholderTower },
-  7: { title: 'Le phare', image: placeholderFeast },
+  7: { title: 'Le Président', image: trump07 },
   8: { title: 'La moisson', image: placeholderTower },
   9: { title: 'La Saint-Valentin', image: trump09 },
   10: { title: 'Le camion', image: trump10 },
@@ -45,7 +49,7 @@ export const TRUMP_ART: TrumpArtTable = {
   14: { title: 'Le Référentiel', image: trump14 },
   15: { title: 'La fête', image: placeholderFeast },
   16: { title: 'Le happy hour', image: trump16 },
-  17: { title: 'Le moulin', image: placeholderFeast },
+  17: { title: 'Le Végétarien', image: trump17 },
   18: { title: 'La lune', image: placeholderTower },
   19: { title: 'Le soleil', image: placeholderFeast },
   20: { title: 'Le bal', image: placeholderTower },
