@@ -2,6 +2,14 @@
 import type { Card } from '../../engine'
 import placeholderFeast from '../assets/trumps/placeholder-feast.webp'
 import placeholderTower from '../assets/trumps/placeholder-tower.webp'
+import trump01 from '../assets/trumps/trump-01.webp'
+import trump04 from '../assets/trumps/trump-04.webp'
+import trump09 from '../assets/trumps/trump-09.webp'
+import trump10 from '../assets/trumps/trump-10.webp'
+import trump11 from '../assets/trumps/trump-11.webp'
+import trump12 from '../assets/trumps/trump-12.webp'
+import trump14 from '../assets/trumps/trump-14.webp'
+import trump21 from '../assets/trumps/trump-21.webp'
 
 export interface TrumpArt {
   /** Titre en casse normale (« La tour ») ; l'affichage le passe en majuscules. */
@@ -19,27 +27,27 @@ export type TrumpArtTable = Readonly<Partial<Record<number, TrumpArt>>>
 // puis remplacer l'image de sa ligne (`16: { title: 'La tour', image: trump16 }`).
 // Retirer une ligne rend à l'atout l'affichage non illustré. Mode d'emploi complet : docs/illustrations-atouts.md.
 export const TRUMP_ART: TrumpArtTable = {
-  1: { title: 'Le voyage', image: placeholderFeast },
+  1: { title: 'La tour', image: trump01 },
   2: { title: 'Le pont', image: placeholderTower },
   3: { title: 'Le partage', image: placeholderFeast },
-  4: { title: 'La forge', image: placeholderTower },
+  4: { title: 'La Calédonie', image: trump04 },
   5: { title: "L'atelier", image: placeholderFeast },
   6: { title: 'Le marché', image: placeholderTower },
   7: { title: 'Le phare', image: placeholderFeast },
   8: { title: 'La moisson', image: placeholderTower },
-  9: { title: 'La foire', image: placeholderFeast },
-  10: { title: 'La roue de la fortune', image: placeholderTower },
-  11: { title: 'Le banquet', image: placeholderFeast },
-  12: { title: 'Le pendu', image: placeholderTower },
+  9: { title: 'La Saint-Valentin', image: trump09 },
+  10: { title: 'Le camion', image: trump10 },
+  11: { title: 'Le partage', image: trump11 },
+  12: { title: 'La roue', image: trump12 },
   13: { title: 'Le jardin', image: placeholderFeast },
-  14: { title: 'Le puits', image: placeholderTower },
+  14: { title: 'Le Référentiel', image: trump14 },
   15: { title: 'La fête', image: placeholderFeast },
   16: { title: 'La tour', image: placeholderTower },
   17: { title: 'Le moulin', image: placeholderFeast },
   18: { title: 'La lune', image: placeholderTower },
   19: { title: 'Le soleil', image: placeholderFeast },
   20: { title: 'Le bal', image: placeholderTower },
-  21: { title: 'Le monde', image: placeholderFeast },
+  21: { title: 'Le yaourt', image: trump21 },
 }
 
 /** Habillage d'une carte, ou null pour l'excuse, une carte de couleur ou un atout sans titre ni illustration. */
