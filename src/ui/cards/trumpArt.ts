@@ -15,6 +15,7 @@ import trump12 from '../assets/trumps/trump-12.webp'
 import trump14 from '../assets/trumps/trump-14.webp'
 import trump16 from '../assets/trumps/trump-16.webp'
 import trump17 from '../assets/trumps/trump-17.webp'
+import trump19 from '../assets/trumps/trump-19.webp'
 import trump21 from '../assets/trumps/trump-21.webp'
 
 export interface TrumpArt {
@@ -51,7 +52,7 @@ export const TRUMP_ART: TrumpArtTable = {
   16: { title: 'Le happy hour', image: trump16 },
   17: { title: 'Le Végétarien', image: trump17 },
   18: { title: 'La lune', image: placeholderTower },
-  19: { title: 'Le soleil', image: placeholderFeast },
+  19: { title: 'La Différence', image: trump19 },
   20: { title: 'Le bal', image: placeholderTower },
   21: { title: 'Le yaourt', image: trump21 },
 }
