@@ -142,7 +142,7 @@ Si le nom du fichier est mal écrit, `npm run build` (et le serveur de dev) éch
 
 ### Illustrations provisoires
 
-Tant que les vraies images ne sont pas faites, chaque atout pointe sur l'une des deux images provisoires, `placeholder-tower.webp` ou `placeholder-feast.webp`. Une fois les 21 vraies images branchées, tu peux supprimer ces deux fichiers et leurs deux lignes d'import.
+Tant que sa vraie image n'est pas faite, un atout pointe sur l'image provisoire `placeholder-tower.webp`. Une fois les 21 vraies images branchées, tu peux supprimer ce fichier et sa ligne d'import. (La seconde image provisoire, `placeholder-feast.webp`, a déjà été retirée quand plus aucun atout ne l'utilisait : la vérification des types refuse un import inutilisé.)
 
 ### Revenir à l'affichage simple
 
