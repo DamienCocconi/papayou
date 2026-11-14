@@ -1,6 +1,7 @@
 // Libellés d'affichage : noms des joueurs, symboles des couleurs, rangs. Aucune règle du jeu ici.
 import type { Card, PlayerView, Suit } from '../engine'
 import type { RoomErrorCode, SessionInfo } from '../net/protocol'
+import { TRUMP_ART, trumpArt, type TrumpArtTable } from './cards/trumpArt'
 
 export const SUIT_SYMBOL: Record<Suit, string> = { hearts: '♥', diamonds: '♦', clubs: '♣', spades: '♠' }
 export const SUIT_NAME: Record<Suit, string> = { hearts: 'Cœur', diamonds: 'Carreau', clubs: 'Trèfle', spades: 'Pique' }
@@ -11,13 +12,15 @@ export function rankLabel(rank: number): string {
   return FIGURES[rank] ?? String(rank)
 }
 
-/** Texte lisible d'une carte, pour les info-bulles et l'accessibilité. */
-export function cardName(card: Card): string {
+/** Texte lisible d'une carte, pour les info-bulles et l'accessibilité. Un atout illustré y ajoute son titre. */
+export function cardName(card: Card, artTable: TrumpArtTable = TRUMP_ART): string {
   switch (card.kind) {
     case 'suit':
       return `${rankLabel(card.rank)} de ${SUIT_NAME[card.suit].toLowerCase()}`
-    case 'trump':
-      return `Atout ${card.value}`
+    case 'trump': {
+      const art = trumpArt(card, artTable)
+      return art === null ? `Atout ${card.value}` : `Atout ${card.value}, ${art.title}`
+    }
     case 'excuse':
       return 'Excuse'
   }

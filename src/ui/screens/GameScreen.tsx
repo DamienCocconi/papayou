@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { GIFT_SIZE } from '../../engine'
 import type { Action, Suit } from '../../engine'
+import frameImage from '../assets/trumps/frame.webp'
+import { trumpArtImages } from '../cards/trumpArt'
 import type { GameController } from '../controller/types'
 import { GameEnd } from '../components/GameEnd'
 import { GiftSlots } from '../components/GiftSlots'
@@ -43,6 +45,13 @@ export function GameScreen({ controller, onQuit, admin }: Props) {
   const names = useMemo(() => (session ? seatNames(session, me) : null), [session, me])
   const [adminOpen, setAdminOpen] = useState(false)
   const turn = turnSeat(view)
+
+  // Précharge le cadre et les illustrations des atouts, pour éviter des cartes à trou à la première donne.
+  useEffect(() => {
+    const images = trumpArtImages()
+    if (images.length === 0) return
+    for (const url of [frameImage, ...images]) new Image().src = url
+  }, [])
 
   // Choix d'affichage de la main, propre à cet appareil (jamais envoyé sur le réseau).
   const [layoutChoice, setLayoutChoice] = useState<HandLayout>(() => readLayout(browserStorage()))

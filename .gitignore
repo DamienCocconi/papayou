@@ -24,3 +24,6 @@ npm-debug.log*
 
 # Graphe de connaissances graphify (généré)
 graphify-out/
+
+# Images de référence pour générer les illustrations (photos de tiers : gardées en local, jamais publiées)
+docs/references/
