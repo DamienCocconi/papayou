@@ -34,12 +34,12 @@ Pour vérifier un changement : `npm run dev`, puis lancer une partie. Le serveur
 Dans [`src/ui/cards/trumpArt.ts`](../src/ui/cards/trumpArt.ts), chaque atout a sa ligne :
 
 ```ts
-16: { title: 'La tour', image: placeholderTower },
+1: { title: 'La tour', image: trump01 },
 ```
 
 Modifie le texte du titre.
 
-- **Casse normale** : écris `'La tour'`, pas `'LA TOUR'`. L'affichage passe en majuscules tout seul, et l'info-bulle de la carte (« Atout 16, La tour ») garde la casse normale.
+- **Casse normale** : écris `'La tour'`, pas `'LA TOUR'`. L'affichage passe en majuscules tout seul, et l'info-bulle de la carte (« Atout 1, La tour ») garde la casse normale.
 - **Apostrophe** : entoure le titre de guillemets doubles, par exemple `"L'atelier"`.
 - **Longueur** : un titre long rétrécit automatiquement pour tenir dans le cartouche. Au-delà d'une vingtaine de caractères, il devient petit, donc mieux vaut rester court.
 
@@ -126,23 +126,27 @@ Retouche possible si l'image sort encore « trop IA » (Photopea) : la réduire 
 
 ### 2. Brancher l'image
 
-Exemple pour l'atout 16 :
+Les 21 atouts ont chacun leur fichier `src/ui/assets/trumps/trump-NN.webp`, où `NN` est le numéro de l'atout sur deux chiffres. Pour changer l'illustration d'un atout, **remplace simplement son fichier** par la nouvelle image, sous le même nom : rien d'autre à toucher.
 
-1. Dépose le fichier dans `src/ui/assets/trumps/`, par exemple `trump-16.webp`.
-2. En haut de [`trumpArt.ts`](../src/ui/cards/trumpArt.ts), à côté des autres imports, ajoute :
-   ```ts
-   import trump16 from '../assets/trumps/trump-16.webp'
-   ```
-3. Remplace l'image de la ligne de l'atout :
-   ```ts
-   16: { title: 'La tour', image: trump16 },
-   ```
+Pour **déplacer une illustration vers un autre numéro**, renomme le fichier (par exemple `trump-06.webp` en `trump-18.webp`), puis mets à jour dans [`trumpArt.ts`](../src/ui/cards/trumpArt.ts) la ligne d'import et la ligne de l'atout :
 
-Si le nom du fichier est mal écrit, `npm run build` (et le serveur de dev) échoue avec un message qui nomme le fichier : on ne peut pas livrer une carte à trou.
+```ts
+import trump18 from '../assets/trumps/trump-18.webp'
+// ...
+18: { title: 'La Planque', image: trump18 },
+```
 
-### Illustrations provisoires
+Si le nom du fichier est mal écrit, `npm run build` (et le serveur de dev) échoue avec un message qui nomme le fichier : on ne peut pas livrer une carte à trou. À l'inverse, un import qui ne sert plus fait échouer la vérification des types (`npx tsc -b`) : supprime-le.
 
-Tant que sa vraie image n'est pas faite, un atout pointe sur l'image provisoire `placeholder-tower.webp`. Une fois les 21 vraies images branchées, tu peux supprimer ce fichier et sa ligne d'import. (La seconde image provisoire, `placeholder-feast.webp`, a déjà été retirée quand plus aucun atout ne l'utilisait : la vérification des types refuse un import inutilisé.)
+### Conversion d'une image générée
+
+Les IA d'images livrent en général du 1086 x 1448 px. On la réduit à 600 x 800 px et on l'enregistre en WebP qualité 70, par exemple avec Python et Pillow :
+
+```bash
+python -c "from PIL import Image; im=Image.open('source.webp').convert('RGB'); im.resize((600, 800), Image.LANCZOS).save('src/ui/assets/trumps/trump-08.webp', 'WEBP', quality=70, method=6)"
+```
+
+Photopea (Fichier > Exporter sous > WEBP) fait aussi l'affaire.
 
 ### Revenir à l'affichage simple
 

@@ -1,6 +1,5 @@
 // Habillage des atouts : titre et illustration de chaque atout illustré. Purement cosmétique, aucune règle du jeu ici.
 import type { Card } from '../../engine'
-import placeholderTower from '../assets/trumps/placeholder-tower.webp'
 import trump01 from '../assets/trumps/trump-01.webp'
 import trump02 from '../assets/trumps/trump-02.webp'
 import trump03 from '../assets/trumps/trump-03.webp'
@@ -8,6 +7,7 @@ import trump04 from '../assets/trumps/trump-04.webp'
 import trump05 from '../assets/trumps/trump-05.webp'
 import trump06 from '../assets/trumps/trump-06.webp'
 import trump07 from '../assets/trumps/trump-07.webp'
+import trump08 from '../assets/trumps/trump-08.webp'
 import trump09 from '../assets/trumps/trump-09.webp'
 import trump10 from '../assets/trumps/trump-10.webp'
 import trump11 from '../assets/trumps/trump-11.webp'
@@ -32,10 +32,8 @@ export interface TrumpArt {
 /** Valeur de l'atout (1 à 21) -> habillage. Un atout absent garde l'affichage non illustré. */
 export type TrumpArtTable = Readonly<Partial<Record<number, TrumpArt>>>
 
-// Illustrations provisoires, en attendant les vraies : chaque atout pointe sur l'une des deux.
-// Pour illustrer un atout pour de bon : déposer `../assets/trumps/trump-NN.webp` (portrait 3:4, ~600 px de large),
-// l'importer ci-dessous (`import trump16 from '../assets/trumps/trump-16.webp'`)
-// puis remplacer l'image de sa ligne (`16: { title: 'La tour', image: trump16 }`).
+// Les 21 atouts sont illustrés. Pour changer une illustration : remplacer `../assets/trumps/trump-NN.webp`
+// (portrait 3:4, ~600 px de large) ; pour changer un titre : modifier sa ligne ci-dessous.
 // Retirer une ligne rend à l'atout l'affichage non illustré. Mode d'emploi complet : docs/illustrations-atouts.md.
 export const TRUMP_ART: TrumpArtTable = {
   1: { title: 'La tour', image: trump01 },
@@ -45,7 +43,7 @@ export const TRUMP_ART: TrumpArtTable = {
   5: { title: "L'abus", image: trump05 },
   6: { title: 'Le Campus', image: trump06 },
   7: { title: 'Le Président', image: trump07 },
-  8: { title: 'La moisson', image: placeholderTower },
+  8: { title: 'Le Comptoir', image: trump08 },
   9: { title: 'La Saint-Valentin', image: trump09 },
   10: { title: 'Le camion', image: trump10 },
   11: { title: 'Le partage', image: trump11 },
