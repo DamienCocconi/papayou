@@ -6,6 +6,7 @@ import { trumpArt } from '../cards/trumpArt'
 import { emphasisLayout, heldLayout, playLineY } from '../hand/emphasis'
 import type { CardBox, DisplayedSlot, ScreenBounds } from '../hand/emphasis'
 import { FAN_LIFT, fanCardSize, fanHeight, fanLayout, fanScale } from '../hand/fanLayout'
+import { nextOrigin } from '../hand/fanOrigin'
 import { gestureCardId } from '../hand/handGesture'
 import { useElementWidth } from '../hand/useElementWidth'
 import { useHandGesture } from '../hand/useHandGesture'
@@ -52,10 +53,19 @@ export function FanHand({ cards, purpose, canPlay, isDisabled, emphasizedId, onS
   // Mesurée à chaque rendu, et quand l'écran de jeu change de taille : à la rotation du téléphone, la
   // mise en page finale peut arriver après l'événement `resize`, et la position retenue serait périmée.
   const [origin, setOrigin] = useState({ left: 0, top: 0 })
+  /** Dernière position retenue, lisible sans rendu : sert à ne pas appeler setOrigin pour rien. */
+  const originRef = useRef(origin)
   const measureOrigin = useCallback(() => {
     const rect = containerRef.current?.getBoundingClientRect()
     if (rect === undefined) return
-    setOrigin((cur) => (cur.left === rect.left && cur.top === rect.top ? cur : { left: rect.left, top: rect.top }))
+    // On compare à la dernière position retenue AVANT d'appeler setOrigin. Un setOrigin qui ne change
+    // rien n'est pas toujours ignoré par React : il peut demander un rendu de vérification, qui relance
+    // cet effet, qui rappelle setOrigin... Sur Android, au rallumage de l'écran (volet magnétique),
+    // cette boucle dépassait la limite de React et vidait l'écran.
+    const next = nextOrigin(originRef.current, { left: rect.left, top: rect.top })
+    if (next === originRef.current) return
+    originRef.current = next
+    setOrigin(next)
   }, [containerRef])
   useLayoutEffect(measureOrigin)
   useLayoutEffect(() => {
