@@ -27,6 +27,15 @@ export function App() {
     return code === null ? { kind: 'home' } : { kind: 'guest', code }
   })
 
+  // Aucun menu contextuel du navigateur, nulle part dans le jeu (clic droit, appui long, calques compris) :
+  // il gênerait les gestes, et le clic droit sert à agrandir un atout illustré. Le copier-coller par ce menu
+  // est abandonné, y compris dans les champs de saisie.
+  useEffect(() => {
+    const block = (event: MouseEvent) => event.preventDefault()
+    document.addEventListener('contextmenu', block)
+    return () => document.removeEventListener('contextmenu', block)
+  }, [])
+
   // Le contrôleur local est créé dans un gestionnaire d'événement, jamais pendant le rendu.
   // On arrête les minuteries des bots quand on quitte la partie ou qu'on démonte l'application.
   useEffect(() => {

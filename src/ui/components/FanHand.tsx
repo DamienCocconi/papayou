@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import type { Card } from '../../engine'
+import { useCardInspect } from '../cards/cardInspect'
+import { trumpArt } from '../cards/trumpArt'
 import { emphasisLayout, heldLayout, playLineY } from '../hand/emphasis'
 import type { CardBox, DisplayedSlot, ScreenBounds } from '../hand/emphasis'
 import { FAN_LIFT, fanCardSize, fanHeight, fanLayout, fanScale } from '../hand/fanLayout'
@@ -72,6 +74,7 @@ export function FanHand({ cards, purpose, canPlay, isDisabled, emphasizedId, onS
   const slots = fanLayout(cards.length, width, scale)
 
   const heldRef = useRef<HTMLDivElement>(null)
+  const inspect = useCardInspect()
   const { state, handlers } = useHandGesture({
     containerRef,
     context: {
@@ -82,6 +85,10 @@ export function FanHand({ cards, purpose, canPlay, isDisabled, emphasizedId, onS
       screenTop: bounds.top,
       emphasizedId,
       canPlay,
+      canInspect: (cardId) => {
+        const card = cards.find((c) => c.id === cardId)
+        return inspect !== null && card !== undefined && trumpArt(card) !== null
+      },
     },
     onRelease,
     onRefuse,
@@ -90,14 +97,19 @@ export function FanHand({ cards, purpose, canPlay, isDisabled, emphasizedId, onS
       if (heldRef.current !== null) heldRef.current.style.transform = transformOf(heldLayout(x, y, box, bounds))
     },
     remoteRefusal,
+    // Le réducteur n'émet `inspect` que pour une carte agrandissable (canInspect).
+    onInspect: (cardId) => {
+      const card = cards.find((c) => c.id === cardId)
+      if (card !== undefined) inspect?.(card)
+    },
   })
 
   // Toucher ailleurs retire l'emphase conservée. Les boutons gardent leur rôle : changer d'affichage
-  // doit au contraire la transmettre à l'étalé.
+  // doit au contraire la transmettre à l'étalé. Le calque aussi : le fermer rend l'écran tel qu'il était.
   useEffect(() => {
     if (emphasizedId === null) return
     function dismiss(e: PointerEvent) {
-      if (e.target instanceof Element && e.target.closest('.hand.fan, button, a, input, select') !== null) return
+      if (e.target instanceof Element && e.target.closest('.hand.fan, .lightbox, button, a, input, select') !== null) return
       onSelect(null)
     }
     document.addEventListener('pointerdown', dismiss)
@@ -167,7 +179,8 @@ export function FanHand({ cards, purpose, canPlay, isDisabled, emphasizedId, onS
               data-card-id={emphasized ? card.id : undefined}
               style={{ transform: transformOf(shown), zIndex: emphasized || free ? 1000 : i + 1 }}
             >
-              <CardView card={card} disabled={isDisabled(card.id)} />
+              {/* Appui long décidé par le geste de la main (carte en emphase seulement) ; le clic droit reste à la carte. */}
+              <CardView card={card} disabled={isDisabled(card.id)} longPress={false} />
             </div>
           )
         })}

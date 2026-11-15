@@ -1,7 +1,10 @@
 import { useState } from 'react'
-import type { CSSProperties } from 'react'
+import type { CSSProperties, MouseEvent } from 'react'
 import type { Card } from '../../engine'
 import frameImage from '../assets/trumps/frame.webp'
+import { useCardInspect } from '../cards/cardInspect'
+import { contextMenuFromTouch } from '../cards/touchPress'
+import { useLongPress } from '../cards/useLongPress'
 import { numberInkShift } from '../cards/numberInk'
 import { trumpArt, type TrumpArt } from '../cards/trumpArt'
 import { cardName, rankLabel, SUIT_SYMBOL } from '../labels'
@@ -13,6 +16,11 @@ interface Props {
   disabled?: boolean
   small?: boolean
   onClick?: () => void
+  /**
+   * Agrandissement par appui long au doigt (atout illustré seulement). Désactivé dans l'éventail, où le
+   * geste de la main décide lui-même (appui long sur la carte en emphase). Le clic droit reste actif.
+   */
+  longPress?: boolean
 }
 
 /** Teinte rouge pour cœur et carreau ; le symbole est toujours affiché en plus (lisible sans la couleur). */
@@ -47,10 +55,27 @@ function IllustratedFace({ art, number }: { art: TrumpArt; number: string }) {
   )
 }
 
-export function CardView({ card, selected, disabled, small, onClick }: Props) {
+export function CardView({ card, selected, disabled, small, onClick, longPress = true }: Props) {
+  const art = card === undefined ? null : trumpArt(card)
+  // Seul un atout illustré s'agrandit, et seulement là où l'écran le permet (contexte présent).
+  const inspect = useCardInspect()
+  const inspectCard = inspect !== null && art !== null && card !== undefined ? () => inspect(card) : null
+  const press = useLongPress(longPress ? inspectCard : null)
+
   if (card === undefined) return <div className={`card back${small ? ' small' : ''}`} aria-label="Carte cachée" />
   const { className, corner, symbol } = face(card)
-  const art = trumpArt(card)
+  // Clic droit (ou touche Menu) : agrandit la carte. Venu du doigt, c'est le menu qu'Android envoie de
+  // lui-même vers 500 ms : on l'ignore, l'appui long garde son propre délai (et sa règle dans l'éventail).
+  const inspectHandlers =
+    inspectCard === null
+      ? {}
+      : {
+          ...press.handlers,
+          onContextMenu: (e: MouseEvent) => {
+            e.preventDefault()
+            if (!contextMenuFromTouch(e.nativeEvent)) inspectCard()
+          },
+        }
   const classes = ['card', className, art !== null ? 'illustrated' : '', small ? 'small' : '', selected ? 'selected' : '', disabled ? 'disabled' : '']
     .filter(Boolean)
     .join(' ')
@@ -68,13 +93,23 @@ export function CardView({ card, selected, disabled, small, onClick }: Props) {
     )
   if (onClick === undefined) {
     return (
-      <div className={classes} title={cardName(card)}>
+      <div className={classes} title={cardName(card)} {...inspectHandlers}>
         {content}
       </div>
     )
   }
   return (
-    <button type="button" className={classes} title={cardName(card)} aria-pressed={selected} disabled={disabled} onClick={onClick}>
+    <button
+      type="button"
+      className={classes}
+      title={cardName(card)}
+      aria-pressed={selected}
+      // Grisée par aria-disabled plutôt que disabled : un bouton désactivé ne reçoit pas de façon fiable
+      // le clic droit ni l'appui long, qui doivent pouvoir agrandir un atout grisé. Le clic est ignoré ici.
+      aria-disabled={disabled === true ? true : undefined}
+      onClick={disabled === true ? undefined : onClick}
+      {...inspectHandlers}
+    >
       {content}
     </button>
   )

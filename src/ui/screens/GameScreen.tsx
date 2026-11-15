@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { GIFT_SIZE } from '../../engine'
-import type { Action, Suit } from '../../engine'
+import type { Action, Card, Suit } from '../../engine'
 import frameImage from '../assets/trumps/frame.webp'
+import { CardInspectContext } from '../cards/cardInspect'
+import { trackTouches } from '../cards/touchPress'
 import { trumpArtImages } from '../cards/trumpArt'
+import { CardView } from '../components/CardView'
 import type { GameController } from '../controller/types'
 import { GameEnd } from '../components/GameEnd'
 import { GiftSlots } from '../components/GiftSlots'
@@ -20,7 +23,7 @@ import { hasRoom, ids, isComplete } from '../hand/giftDraft'
 import { browserStorage, readLayout, writeLayout } from '../hand/layoutPreference'
 import type { HandLayout } from '../hand/layoutPreference'
 import { useGiftDraft } from '../hand/useGiftDraft'
-import { playerName, roomErrorText, seatNames, SUIT_NAME, SUIT_SYMBOL, turnSeat } from '../labels'
+import { cardName, playerName, roomErrorText, seatNames, SUIT_NAME, SUIT_SYMBOL, turnSeat } from '../labels'
 import { useGame } from '../useGame'
 
 interface Props {
@@ -49,7 +52,12 @@ export function GameScreen({ controller, onQuit, admin, inviteLink }: Props) {
   const names = useMemo(() => (session ? seatNames(session, me) : null), [session, me])
   const [adminOpen, setAdminOpen] = useState(false)
   const [qrOpen, setQrOpen] = useState(false)
+  /** Atout illustré affiché en grand dans le calque (null : aucun). */
+  const [inspected, setInspected] = useState<Card | null>(null)
   const turn = turnSeat(view)
+
+  // Doigts posés suivis pendant la partie : le menu qu'Android envoie à l'appui long n'agrandit pas de carte.
+  useEffect(trackTouches, [])
 
   // Précharge le cadre et les illustrations des atouts, pour éviter des cartes à trou à la première donne.
   useEffect(() => {
@@ -201,104 +209,117 @@ export function GameScreen({ controller, onQuit, admin, inviteLink }: Props) {
   const hasEndPanel = view.phase === 'roundEnd' || view.phase === 'gameEnd'
 
   return (
-    <div className={`game${fan ? ' fan' : ''}${exchange ? ' exchange' : ''}`}>
-      <div className="head">
-        <div className="topbar">
-          <span className="badge">
-            Manche {Math.min(view.roundIndex + 1, view.playerCount)} / {view.playerCount}
-          </span>
-          {view.papayouSuit !== null && (
-            <span className="badge">
-              Papayou : <strong>{SUIT_SYMBOL[view.papayouSuit]}</strong>
-              <span className="suit-name"> {SUIT_NAME[view.papayouSuit]}</span>
-            </span>
-          )}
-          <span className="topbar-actions">
-            {inviteLink !== undefined && (
-              <button
-                type="button"
-                className="btn secondary icon-btn"
-                aria-label="Afficher le QR code d'invitation"
-                title="QR code d'invitation"
-                onClick={() => setQrOpen(true)}
-              >
-                <QrIcon />
-              </button>
-            )}
-            <button
-              type="button"
-              className="btn secondary icon-btn"
-              aria-label={fan ? 'Afficher la main étalée' : 'Afficher la main en éventail'}
-              title={fan ? 'Main étalée' : 'Main en éventail'}
-              onClick={toggleLayout}
-            >
-              {fan ? <GridIcon /> : <FanIcon />}
-            </button>
-            {admin !== undefined && session !== null && (
-              <button type="button" className="btn secondary" onClick={() => setAdminOpen((open) => !open)}>
-                Administration
-              </button>
-            )}
-            <button type="button" className="btn secondary" onClick={onQuit}>
-              Quitter
-            </button>
-          </span>
-        </div>
-        <div className="status" role="status">
-          {refusal?.text ?? error ?? (session?.error ? roomErrorText(session.error) : status())}
-        </div>
-      </div>
+    <>
+      <CardInspectContext.Provider value={setInspected}>
+        <div className={`game${fan ? ' fan' : ''}${exchange ? ' exchange' : ''}`}>
+          <div className="head">
+            <div className="topbar">
+              <span className="badge">
+                Manche {Math.min(view.roundIndex + 1, view.playerCount)} / {view.playerCount}
+              </span>
+              {view.papayouSuit !== null && (
+                <span className="badge">
+                  Papayou : <strong>{SUIT_SYMBOL[view.papayouSuit]}</strong>
+                  <span className="suit-name"> {SUIT_NAME[view.papayouSuit]}</span>
+                </span>
+              )}
+              <span className="topbar-actions">
+                {inviteLink !== undefined && (
+                  <button
+                    type="button"
+                    className="btn secondary icon-btn"
+                    aria-label="Afficher le QR code d'invitation"
+                    title="QR code d'invitation"
+                    onClick={() => setQrOpen(true)}
+                  >
+                    <QrIcon />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="btn secondary icon-btn"
+                  aria-label={fan ? 'Afficher la main étalée' : 'Afficher la main en éventail'}
+                  title={fan ? 'Main étalée' : 'Main en éventail'}
+                  onClick={toggleLayout}
+                >
+                  {fan ? <GridIcon /> : <FanIcon />}
+                </button>
+                {admin !== undefined && session !== null && (
+                  <button type="button" className="btn secondary" onClick={() => setAdminOpen((open) => !open)}>
+                    Administration
+                  </button>
+                )}
+                <button type="button" className="btn secondary" onClick={onQuit}>
+                  Quitter
+                </button>
+              </span>
+            </div>
+            <div className="status" role="status">
+              {refusal?.text ?? error ?? (session?.error ? roomErrorText(session.error) : status())}
+            </div>
+          </div>
 
-      {session !== null && paused && <PauseBanner session={session} mySeat={me} />}
-      {!fan && adminPanel}
+          {session !== null && paused && <PauseBanner session={session} mySeat={me} />}
+          {!fan && adminPanel}
 
-      <div className="stage">
-        <Table view={view} names={names} />
+          <div className="stage">
+            <Table view={view} names={names} />
 
-        <div className="center">
-          {view.phase === 'choosePapayou' && view.roundLeader === me && (
-            <PapayouPicker onPick={(suit: Suit) => dispatch({ type: 'choosePapayou', seat: me, suit })} />
-          )}
-          {fan && exchange && (
-            <GiftSlots
-              slots={giftSlots}
-              locked={handMode !== 'give'}
-              onRemove={gift.remove}
+            <div className="center">
+              {view.phase === 'choosePapayou' && view.roundLeader === me && (
+                <PapayouPicker onPick={(suit: Suit) => dispatch({ type: 'choosePapayou', seat: me, suit })} />
+              )}
+              {fan && exchange && (
+                <GiftSlots
+                  slots={giftSlots}
+                  locked={handMode !== 'give'}
+                  onRemove={gift.remove}
+                  onGive={give}
+                  fullBump={fullBump}
+                />
+              )}
+              {!fan && endPanels}
+              <LastTrick view={view} names={names} compact={fan} />
+            </div>
+
+            {fan && hasEndPanel && <div className="overlay">{endPanels}</div>}
+            {fan && adminPanel !== null && <div className="overlay">{adminPanel}</div>}
+          </div>
+
+          <div className="hand-zone">
+            <Hand
+              cards={view.hand}
+              mode={handMode}
+              layout={layout}
+              resetKey={resetKey}
+              playableIds={playableIds}
+              giftIds={giftIds}
+              onToggleGift={gift.toggle}
               onGive={give}
-              fullBump={fullBump}
+              canRelease={canRelease}
+              onRelease={release}
+              onRefuse={refuse}
+              playRefusal={remoteRefusal}
             />
+          </div>
+
+          {qrOpen && inviteLink !== undefined && (
+            <Lightbox label="QR code d'invitation" onClose={() => setQrOpen(false)}>
+              <InviteQr link={inviteLink} />
+            </Lightbox>
           )}
-          {!fan && endPanels}
-          <LastTrick view={view} names={names} compact={fan} />
         </div>
+      </CardInspectContext.Provider>
 
-        {fan && hasEndPanel && <div className="overlay">{endPanels}</div>}
-        {fan && adminPanel !== null && <div className="overlay">{adminPanel}</div>}
-      </div>
-
-      <div className="hand-zone">
-        <Hand
-          cards={view.hand}
-          mode={handMode}
-          layout={layout}
-          resetKey={resetKey}
-          playableIds={playableIds}
-          giftIds={giftIds}
-          onToggleGift={gift.toggle}
-          onGive={give}
-          canRelease={canRelease}
-          onRelease={release}
-          onRefuse={refuse}
-          playRefusal={remoteRefusal}
-        />
-      </div>
-
-      {qrOpen && inviteLink !== undefined && (
-        <Lightbox label="QR code d'invitation" onClose={() => setQrOpen(false)}>
-          <InviteQr link={inviteLink} />
+      {/* Hors du fournisseur : la carte agrandie ne s'agrandit pas elle-même. */}
+      {inspected !== null && (
+        <Lightbox label={cardName(inspected)} onClose={() => setInspected(null)}>
+          <div className="card-inspect">
+            <CardView card={inspected} />
+          </div>
         </Lightbox>
       )}
-    </div>
+    </>
   )
 }
 

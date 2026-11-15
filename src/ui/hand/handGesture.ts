@@ -4,6 +4,7 @@
  * Aucune règle du jeu ici, ni de destination : `canPlay` dit si la carte peut partir (coup légal en phase
  * de jeu, place libre pendant l'échange), et l'effet `release` laisse l'écran décider de ce qu'elle devient.
  */
+import { cancelsLongPress } from '../cards/longPress'
 import { designateCard, holdLineY, isAboveLine } from './emphasis'
 import type { CardSize } from './emphasis'
 import type { FanSlot } from './fanLayout'
@@ -24,6 +25,8 @@ export type GestureState =
       refused: boolean
       /** Appui sur la carte agrandie : elle reste désignée tant que le pointeur ne s'en éloigne pas. */
       pressed: boolean
+      /** Le pointeur n'a pas quitté la tolérance de l'appui long depuis l'ancre : la carte peut encore s'agrandir. */
+      still: boolean
     }
   | {
       phase: 'holding'
@@ -49,6 +52,8 @@ export type GestureEvent =
   | { type: 'handChanged' }
   /** Le coup en attente est terminé : refusé, ou sans réponse dans le délai. */
   | { type: 'settled' }
+  /** Le doigt est resté posé le délai de l'appui long : agrandit la carte en emphase, si l'appui a commencé sur elle. */
+  | { type: 'longPress'; pointerId: number }
 
 export type GestureEffect =
   /** Carte relâchée au-dessus de la ligne : jouée, ou placée dans un emplacement d'échange. */
@@ -56,6 +61,8 @@ export type GestureEffect =
   | { type: 'refuse'; cardId: string }
   /** Emphase conservée après le relâchement : toucher, ou carte tirée puis relâchée sous la ligne (`null` : aucune). */
   | { type: 'select'; cardId: string | null }
+  /** Appui long sur la carte en emphase : l'écran l'agrandit (s'il s'agit d'un atout illustré). */
+  | { type: 'inspect'; cardId: string }
 
 /** Ce que le réducteur lit de la situation au moment de l'événement. */
 export interface GestureContext {
@@ -69,6 +76,8 @@ export interface GestureContext {
   emphasizedId: string | null
   /** Vrai si la carte peut partir de la main maintenant. */
   canPlay: (cardId: string) => boolean
+  /** Vrai si la carte peut s'agrandir (atout illustré) : sinon, l'appui long ne l'interrompt pas. */
+  canInspect: (cardId: string) => boolean
 }
 
 export interface GestureResult {
@@ -136,7 +145,17 @@ export function reduceGesture(state: GestureState, event: GestureEvent, ctx: Ges
       const cardId = pressedId ?? designate(event.x, state.phase === 'hover' ? state.cardId : ctx.emphasizedId, ctx)
       if (cardId === null) return unchanged
       return {
-        state: { phase: 'scrubbing', pointerId: event.pointerId, cardId, mouse: event.mouse === true, anchorX: event.x, anchorY: event.y, refused: false, pressed: pressedId !== null },
+        state: {
+          phase: 'scrubbing',
+          pointerId: event.pointerId,
+          cardId,
+          mouse: event.mouse === true,
+          anchorX: event.x,
+          anchorY: event.y,
+          refused: false,
+          pressed: pressedId !== null,
+          still: true,
+        },
         effects: [],
       }
     }
@@ -151,11 +170,14 @@ export function reduceGesture(state: GestureState, event: GestureEvent, ctx: Ges
       const keepsPressed = state.pressed && Math.abs(event.x - state.anchorX) < ctx.cardSize.width * PRESSED_RELEASE_RATIO
       const cardId = keepsPressed ? state.cardId : designate(event.x, state.cardId, ctx)
       if (cardId !== null && cardId !== state.cardId) {
-        return { state: { ...state, cardId, anchorX: event.x, anchorY: event.y, refused: false, pressed: false }, effects: [] }
+        return { state: { ...state, cardId, anchorX: event.x, anchorY: event.y, refused: false, pressed: false, still: false }, effects: [] }
       }
 
+      // Une fois sorti de la tolérance, l'appui ne peut plus agrandir la carte, même s'il y revient.
+      const moved = state.still && cancelsLongPress(event.x - state.anchorX, event.y - state.anchorY)
+      const current: GestureResult = moved ? { state: { ...state, still: false }, effects: [] } : unchanged
       const rise = state.anchorY - event.y
-      if (rise <= PULL_THRESHOLD || rise <= Math.abs(event.x - state.anchorX)) return unchanged
+      if (rise <= PULL_THRESHOLD || rise <= Math.abs(event.x - state.anchorX)) return current
       if (ctx.canPlay(state.cardId)) {
         const lineY = holdLineY(ctx.lineY, event.y, ctx.screenTop)
         return {
@@ -171,8 +193,8 @@ export function reduceGesture(state: GestureState, event: GestureEvent, ctx: Ges
           effects: [],
         }
       }
-      if (state.refused) return unchanged
-      return { state: { ...state, refused: true }, effects: [{ type: 'refuse', cardId: state.cardId }] }
+      if (state.refused) return current
+      return { state: { ...state, refused: true, still: state.still && !moved }, effects: [{ type: 'refuse', cardId: state.cardId }] }
     }
 
     case 'up': {
@@ -205,5 +227,19 @@ export function reduceGesture(state: GestureState, event: GestureEvent, ctx: Ges
 
     case 'settled':
       return state.phase === 'pending' ? { state: IDLE, effects: [] } : unchanged
+
+    case 'longPress':
+      // Seulement au doigt, sur la carte en emphase pressée dès l'appui, sans s'être déplacé ni l'avoir prise.
+      if (state.phase !== 'scrubbing' || state.pointerId !== event.pointerId) return unchanged
+      if (state.mouse || !state.pressed || !state.still) return unchanged
+      // Carte qui ne s'agrandit pas : le geste continue, la carte reste jouable même après une hésitation.
+      if (!ctx.canInspect(state.cardId)) return unchanged
+      return {
+        state: IDLE,
+        effects: [
+          { type: 'select', cardId: state.cardId },
+          { type: 'inspect', cardId: state.cardId },
+        ],
+      }
   }
 }
