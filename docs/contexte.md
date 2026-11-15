@@ -43,6 +43,7 @@ Le second but compte autant que le premier. Il vaut mieux un workflow propre et 
 - **Veille de l'écran** sur mobile : utiliser l'API Wake Lock pendant la partie.
 - **Réseaux wifi avec isolation des clients** (invités, publics) : le WebRTC direct peut échouer. Solution de repli prévue plus tard : un petit relais Node, sans toucher au moteur.
   - **Réseau d'entreprise** : UDP sortant filtré, port 3478 (TURN de PeerJS) bloqué ou mDNS filtré peuvent empêcher la connexion. Joueurs attendus : chacun sur son smartphone, en 4G/5G ou sur le wifi corporate. **À faire : tester le site publié sur ce réseau** (hôte en 4G/5G, invité sur le wifi corporate, puis les deux sur le wifi). Si cela échoue, changement séparé `add-turn-config` : `iceServers` configurable avec un TURN en TLS/443 ; en dernier recours, le relais Node. Conseil en attendant : prendre l'hôte en 4G/5G.
+- **QR code d'invitation en développement** : le QR code encode l'adresse courante de la page. Avec `npm run dev` ouvert sur `localhost`, il pointe vers `localhost`, ce qui ne mène nulle part sur un autre téléphone. Pour le tester sur de vrais téléphones, utiliser le site publié, ou lancer `npm run dev -- --host` et ouvrir la page sur le PC par son adresse IP du réseau local (`http://192.168.x.x:5173/`).
 - **L'hôte voit techniquement toutes les mains** via les outils de développement du navigateur. Accepté pour un usage entre amis. Les non-hôtes ne reçoivent que leur propre vue.
 - **Cas limites de l'excuse** : principale source d'erreurs. Un test dédié par cas.
 

@@ -29,6 +29,21 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 .home select { width: 100%; padding: 8px; font: inherit; }
 .home .btn { margin-top: 24px; width: 100%; }
 
+/* Calque plein écran (Lightbox) : au-dessus de tout, fond assombri, un clic n'importe où le ferme. */
+.lightbox {
+  position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.75); cursor: pointer; outline: none;
+  user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+.lightbox-content { display: flex; align-items: center; justify-content: center; max-width: 100%; max-height: 100%; }
+
+/* QR code d'invitation : le plus grand carré qui tient dans la fenêtre (vh en repli des navigateurs sans dvh). */
+.invite-qr { display: block; width: min(92vw, 92vh); height: min(92vw, 92vh); }
+@supports (height: 1dvh) {
+  .invite-qr { width: min(92vw, 92dvh); height: min(92vw, 92dvh); }
+}
+
 /* Écran de jeu */
 .game {
   min-height: 100vh; display: flex; flex-direction: column; gap: 12px; background: var(--felt);

@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { createPeerTransport } from '../../net/peer-transport'
 import { joinRoomAsGuest } from '../../net/session-guest'
 import type { GuestClosedReason, GuestSession } from '../../net/session-guest'
+import { buildInviteLink } from '../../net/room-code'
+import { InviteQr } from '../components/InviteQr'
+import { Lightbox } from '../components/Lightbox'
 import { SeatPicker } from '../components/NetworkPanels'
 import { createGuestController } from '../controller/guest'
 import { roomErrorText } from '../labels'
@@ -39,6 +42,8 @@ const CLOSED_TEXT: Record<GuestClosedReason, string> = {
 function GuestRoom({ code, session, onQuit }: { code: string; session: GuestSession; onQuit: () => void }) {
   const snapshot = useSyncExternalStore(session.subscribe, session.getSnapshot)
   const controller = useMemo(() => createGuestController(session), [session])
+  // buildInviteLink retire le fragment : même lien que l'invité soit arrivé par lien ou par code saisi.
+  const link = useMemo(() => buildInviteLink(window.location.href, code), [code])
 
   switch (snapshot.stage) {
     case 'connecting':
@@ -66,24 +71,7 @@ function GuestRoom({ code, session, onQuit }: { code: string; session: GuestSess
           />
         )
       }
-      return (
-        <div className="home lobby">
-          <h1>Salle {code}</h1>
-          <h2>Joueurs présents</h2>
-          <ul>
-            {snapshot.players.map((name, index) => (
-              <li key={index}>
-                {name}
-                {index === 0 ? ' (hôte)' : ''}
-              </li>
-            ))}
-          </ul>
-          <p role="status">En attente du démarrage par l'hôte…</p>
-          <button type="button" className="btn secondary" onClick={onQuit}>
-            Quitter
-          </button>
-        </div>
-      )
+      return <GuestLobby code={code} players={snapshot.players} link={link} onQuit={onQuit} />
     case 'seats':
       return (
         <div className="home">
@@ -100,10 +88,51 @@ function GuestRoom({ code, session, onQuit }: { code: string; session: GuestSess
         </div>
       )
     case 'playing':
-      return <GameScreen controller={controller} onQuit={onQuit} />
+      return <GameScreen controller={controller} onQuit={onQuit} inviteLink={link} />
     case 'closed':
       return <Message title="Partie interrompue" text={CLOSED_TEXT[snapshot.reason]} onQuit={onQuit} />
   }
+}
+
+interface GuestLobbyProps {
+  code: string
+  players: readonly string[]
+  link: string
+  onQuit: () => void
+}
+
+/**
+ * Lobby de l'invité, une fois son nom donné. Composant à part pour que l'état du QR code
+ * naisse et meure avec le lobby : il ne survit pas au démarrage de la partie.
+ */
+function GuestLobby({ code, players, link, onQuit }: GuestLobbyProps) {
+  const [qrOpen, setQrOpen] = useState(false)
+  return (
+    <div className="home lobby">
+      <h1>Salle {code}</h1>
+      <h2>Joueurs présents</h2>
+      <ul>
+        {players.map((name, index) => (
+          <li key={index}>
+            {name}
+            {index === 0 ? ' (hôte)' : ''}
+          </li>
+        ))}
+      </ul>
+      <p role="status">En attente du démarrage par l'hôte…</p>
+      <button type="button" className="btn secondary" onClick={() => setQrOpen(true)}>
+        Afficher le QR code
+      </button>
+      {qrOpen && (
+        <Lightbox label="QR code d'invitation" onClose={() => setQrOpen(false)}>
+          <InviteQr link={link} />
+        </Lightbox>
+      )}
+      <button type="button" className="btn secondary" onClick={onQuit}>
+        Quitter
+      </button>
+    </div>
+  )
 }
 
 function Message({ title, text, onQuit }: { title: string; text: string; onQuit: () => void }) {

@@ -8,6 +8,8 @@ import type { GameController } from '../controller/types'
 import { GameEnd } from '../components/GameEnd'
 import { GiftSlots } from '../components/GiftSlots'
 import { Hand } from '../components/Hand'
+import { InviteQr } from '../components/InviteQr'
+import { Lightbox } from '../components/Lightbox'
 import { LastTrick } from '../components/LastTrick'
 import { AdminMenu, PauseBanner } from '../components/NetworkPanels'
 import type { AdminActions } from '../components/NetworkPanels'
@@ -26,6 +28,8 @@ interface Props {
   onQuit: () => void
   /** Actions d'administration, fournies seulement à l'hôte d'une salle en réseau. */
   admin?: AdminActions
+  /** Lien d'invitation de la salle, fourni seulement en réseau (hôte et invités) : affiche le bouton QR code. */
+  inviteLink?: string
 }
 
 /** Durée d'affichage du message de refus d'une carte. */
@@ -33,7 +37,7 @@ const REFUSAL_DURATION_MS = 3000
 /** Sans réponse de l'hôte après ce délai, le don redevient modifiable. */
 const GIFT_SENDING_TIMEOUT_MS = 5000
 
-export function GameScreen({ controller, onQuit, admin }: Props) {
+export function GameScreen({ controller, onQuit, admin, inviteLink }: Props) {
   const { view, legalPlays, session } = useGame(controller)
   const me = view.seat
   // En pause (une place libre), personne ne joue : l'hôte refuserait de toute façon.
@@ -44,6 +48,7 @@ export function GameScreen({ controller, onQuit, admin }: Props) {
   )
   const names = useMemo(() => (session ? seatNames(session, me) : null), [session, me])
   const [adminOpen, setAdminOpen] = useState(false)
+  const [qrOpen, setQrOpen] = useState(false)
   const turn = turnSeat(view)
 
   // Précharge le cadre et les illustrations des atouts, pour éviter des cartes à trou à la première donne.
@@ -209,6 +214,17 @@ export function GameScreen({ controller, onQuit, admin }: Props) {
             </span>
           )}
           <span className="topbar-actions">
+            {inviteLink !== undefined && (
+              <button
+                type="button"
+                className="btn secondary icon-btn"
+                aria-label="Afficher le QR code d'invitation"
+                title="QR code d'invitation"
+                onClick={() => setQrOpen(true)}
+              >
+                <QrIcon />
+              </button>
+            )}
             <button
               type="button"
               className="btn secondary icon-btn"
@@ -276,7 +292,32 @@ export function GameScreen({ controller, onQuit, admin }: Props) {
           playRefusal={remoteRefusal}
         />
       </div>
+
+      {qrOpen && inviteLink !== undefined && (
+        <Lightbox label="QR code d'invitation" onClose={() => setQrOpen(false)}>
+          <InviteQr link={inviteLink} />
+        </Lightbox>
+      )}
     </div>
+  )
+}
+
+/** Icône du bouton QR code : trois motifs de repérage et quelques modules. */
+function QrIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="currentColor" fillRule="evenodd">
+      <path d="M3 3h8v8H3zM5 5v4h4V5z" />
+      <path d="M13 3h8v8h-8zM15 5v4h4V5z" />
+      <path d="M3 13h8v8H3zM5 15v4h4v-4z" />
+      <rect x="6" y="6" width="2" height="2" />
+      <rect x="16" y="6" width="2" height="2" />
+      <rect x="6" y="16" width="2" height="2" />
+      <rect x="13" y="13" width="3" height="3" />
+      <rect x="18" y="13" width="3" height="3" />
+      <rect x="15.5" y="16" width="3" height="2.5" />
+      <rect x="13" y="18.5" width="3" height="2.5" />
+      <rect x="18" y="18.5" width="3" height="2.5" />
+    </svg>
   )
 }
 
