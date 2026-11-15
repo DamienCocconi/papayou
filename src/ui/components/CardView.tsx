@@ -7,6 +7,7 @@ import { contextMenuFromTouch } from '../cards/touchPress'
 import { useLongPress } from '../cards/useLongPress'
 import { numberInkShift } from '../cards/numberInk'
 import { trumpArt, type TrumpArt } from '../cards/trumpArt'
+import { useIsPapayou } from '../cards/papayouContext'
 import { cardName, rankLabel, SUIT_SYMBOL } from '../labels'
 
 interface Props {
@@ -61,6 +62,7 @@ export function CardView({ card, selected, disabled, small, onClick, longPress =
   const inspect = useCardInspect()
   const inspectCard = inspect !== null && art !== null && card !== undefined ? () => inspect(card) : null
   const press = useLongPress(longPress ? inspectCard : null)
+  const papayou = useIsPapayou(card)
 
   if (card === undefined) return <div className={`card back${small ? ' small' : ''}`} aria-label="Carte cachée" />
   const { className, corner, symbol } = face(card)
@@ -76,7 +78,15 @@ export function CardView({ card, selected, disabled, small, onClick, longPress =
             if (!contextMenuFromTouch(e.nativeEvent)) inspectCard()
           },
         }
-  const classes = ['card', className, art !== null ? 'illustrated' : '', small ? 'small' : '', selected ? 'selected' : '', disabled ? 'disabled' : '']
+  const classes = [
+    'card',
+    className,
+    art !== null ? 'illustrated' : '',
+    small ? 'small' : '',
+    selected ? 'selected' : '',
+    disabled ? 'disabled' : '',
+    papayou ? 'papayou' : '',
+  ]
     .filter(Boolean)
     .join(' ')
   const content =

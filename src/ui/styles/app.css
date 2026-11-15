@@ -151,6 +151,9 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
    les métriques imposées dans fonts.css donnent presque le même résultat. */
 .card.illustrated .art-number > span, .card.illustrated .art-title > span { display: block; text-box: trim-both cap alphabetic; }
 .card.selected { transform: translateY(-14px); box-shadow: 0 0 0 3px var(--accent); }
+/* Papayou de la manche : liseré chaud et luisant (bord et halo rouge orangé). */
+.card.papayou { border-color: #e8401c; box-shadow: 0 0 0 1px #ff7a1f, 0 0 10px 2px rgba(255, 122, 31, 0.65); }
+.card.papayou.selected { box-shadow: 0 0 0 3px var(--accent), 0 0 12px 3px rgba(255, 122, 31, 0.7); }
 .card.disabled { opacity: 0.4; filter: grayscale(0.6); }
 /* Carte grisée : bouton en aria-disabled (pas disabled, pour qu'elle reste agrandissable) au même aspect. */
 button.card[aria-disabled="true"] { cursor: not-allowed; }
@@ -190,6 +193,9 @@ button.card.selected:hover { transform: translateY(-14px); }
 /* La carte tenue suit le doigt : pas de transition, sa position est écrite à chaque mouvement. */
 .fan-slot.held { transition: none; will-change: transform; }
 .fan-slot.ready .card { box-shadow: 0 0 0 3px var(--accent), 0 6px 18px rgba(0, 0, 0, 0.45); }
+/* Le papayou garde son halo quand il est en emphase ou prêt à être joué. */
+.fan-slot.emphasized .card.papayou { box-shadow: 0 0 0 1px #ff7a1f, 0 0 12px 3px rgba(255, 122, 31, 0.7), 0 6px 18px rgba(0, 0, 0, 0.45); }
+.fan-slot.ready .card.papayou { box-shadow: 0 0 0 3px var(--accent), 0 0 12px 3px rgba(255, 122, 31, 0.7), 0 6px 18px rgba(0, 0, 0, 0.45); }
 .fan-slot.refused .card { animation: card-resist 0.3s ease; }
 @keyframes card-resist { 40% { transform: translateY(-8px); } }
 /* Ligne de jeu : visible seulement pendant une prise. */
