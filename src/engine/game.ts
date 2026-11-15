@@ -9,20 +9,35 @@ export const MIN_PLAYERS = 3
 export const MAX_PLAYERS = 6
 export const GIFT_SIZE = 3
 
-/** Nombre de cartes « 1 » de couleur retirées selon le nombre de joueurs. */
-function removedCount(playerCount: number): number {
-  if (playerCount === 4) return 2
+/** Rang du valet : à 3 joueurs, les figures (valet à roi) sont retirées. */
+const LOWEST_FACE_RANK = 11
+
+/** Figures retirées pour toute la partie : les 16 (valet à roi des quatre couleurs) à 3 joueurs, aucune sinon. */
+function removedFaces(playerCount: number): Card[] {
+  if (playerCount !== 3) return []
+  return createDeck().filter((c) => c.kind === 'suit' && c.rank >= LOWEST_FACE_RANK)
+}
+
+/** Nombre de cartes « 1 » de couleur retirées au hasard selon le nombre de joueurs. */
+function removedOnesCount(playerCount: number): number {
+  if (playerCount === 3 || playerCount === 4) return 2
   if (playerCount === 5) return 3
   return 0
 }
 
-/** Nombre de cartes par joueur pour un nombre de joueurs donné (26, 19, 15, 13). */
+/** Nombre total de cartes retirées : à 3 joueurs, les 16 figures en plus des « 1 ». */
+function removedCount(playerCount: number): number {
+  return removedFaces(playerCount).length + removedOnesCount(playerCount)
+}
+
+/** Nombre de cartes par joueur pour un nombre de joueurs donné (20, 19, 15, 13). */
 export function handSize(playerCount: number): number {
   return (78 - removedCount(playerCount)) / playerCount
 }
 
 /**
- * Crée une partie. Tire une seule fois les « 1 » retirés, puis distribue la première manche.
+ * Crée une partie. Fixe une seule fois les cartes retirées (les figures à 3 joueurs, et les « 1 »
+ * tirés au hasard), puis distribue la première manche.
  * @throws RangeError si le nombre de joueurs n'est pas compris entre 3 et 6.
  */
 export function createGame(playerCount: number, seed: number): GameState {
@@ -35,7 +50,7 @@ export function createGame(playerCount: number, seed: number): GameState {
     rngState,
   )
   rngState = ones.state
-  const removedCards = ones.items.slice(0, removedCount(playerCount))
+  const removedCards = [...removedFaces(playerCount), ...ones.items.slice(0, removedOnesCount(playerCount))]
 
   const base: GameState = {
     version: 1,

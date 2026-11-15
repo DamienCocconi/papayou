@@ -18,7 +18,11 @@ export function c(code: string): Card {
   return suitCard(suit, n)
 }
 
-/** Construit un état en phase de jeu avec des mains et un pli en cours choisis à la main. */
+/**
+ * Construit un état en phase de jeu avec des mains et un pli en cours choisis à la main.
+ * Les mains sont décrites explicitement : aucune carte n'est considérée comme retirée,
+ * sinon une figure placée dans une main à 3 joueurs serait à la fois en main et retirée.
+ */
 export function playingState(opts: {
   playerCount: number
   hands: string[][]
@@ -31,6 +35,7 @@ export function playingState(opts: {
   return {
     ...base,
     phase: 'playing',
+    removedCards: [],
     hands: opts.hands.map((h) => h.map(c)),
     gifts: base.gifts.map(() => null),
     papayouSuit: opts.papayouSuit ?? 'hearts',
