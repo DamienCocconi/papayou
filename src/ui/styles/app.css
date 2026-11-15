@@ -29,6 +29,12 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 .home select { width: 100%; padding: 8px; font: inherit; }
 .home .btn { margin-top: 24px; width: 100%; }
 
+/* Écran de plantage : le rapport reste lisible sur une capture de téléphone. */
+.crash-report {
+  margin: 16px 0 0; padding: 8px; max-height: 50vh; overflow: auto; white-space: pre-wrap; word-break: break-word;
+  font-size: 0.7rem; background: rgba(0, 0, 0, 0.3); border-radius: 6px; user-select: text; -webkit-user-select: text;
+}
+
 /* Calque plein écran (Lightbox) : au-dessus de tout, fond assombri, un clic n'importe où le ferme. */
 .lightbox {
   position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center;
