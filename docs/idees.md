@@ -17,7 +17,7 @@ Dernière mise à jour : 2026-11-15.
 | 7 | Lobby : nombre total de joueurs, bots en complément, récapitulatif | Fonction | Salle et accueil |
 | 8 | ~~À 3 joueurs : cartes de 1 à 10 seulement~~ | Règle | `reduce-deck-three-players` |
 | 9 | ~~À 4 joueurs ou plus : le papayou est le 10~~ | Règle | `papayou-ten` |
-| 10 | Visuel distinct du papayou | UX | Lisibilité de la table |
+| 10 | ~~Visuel distinct du papayou~~ | UX | `add-fx-on-papayou` |
 | 11 | Teintes trèfle et carreau, option par client | UX | Lisibilité de la table |
 | 12 | Délai avant le pli suivant | UX | Rythme du pli |
 | 13 | Animation du pli vers le gagnant | UX | Rythme du pli |
@@ -89,13 +89,13 @@ Tranché : la question ouverte sur le choix de couleur est résolue, l'entameur 
 
 Dans un pli, dès que la première carte est posée, afficher un indicateur de la couleur demandée.
 
-### 10. Papayou reconnaissable
+### ~~10. Papayou reconnaissable~~ → `add-fx-on-papayou`
 
 Une fois la couleur du papayou choisie, la carte papayou (le 7 ou le 10 selon le nombre de joueurs) doit avoir un visuel un peu différent, pour ne pas être confondue avec le 7 ou le 10 d'une autre couleur. Les points 8 et 9 sont livrés : le moteur fournit `isPapayou(card, papayouSuit, playerCount)` pour reconnaître la carte, sans que l'interface code la règle.
 
-Pistes retenues en exploration (à confirmer dans le change) : un effet d'escarbilles avec tsParticles, partout où la carte est affichée, préchargé à l'entrée de l'écran de jeu, actif en permanence. Le code est organisé en catalogue de styles, pour pouvoir plus tard modifier l'effet ou en proposer plusieurs.
+Livré : un liseré luisant rouge orangé (bord et halo) sur la carte papayou, partout où elle est affichée. Un effet d'escarbilles animé avec tsParticles a été essayé puis abandonné : les braises apparaissaient n'importe où et filaient par moments trop vite, ce n'était pas crédible (détails dans le design du change).
 
-Pour plus tard : choisir le style d'animation du papayou dans les options, et respecter le réglage « réduire les animations » du téléphone (`prefers-reduced-motion`).
+Pour plus tard, si on veut un effet animé : braises émises depuis un point fixe de la carte, choix du style dans les options, et respect du réglage « réduire les animations » du téléphone (`prefers-reduced-motion`).
 
 ### 11. Couleurs plus lisibles, option par client
 

@@ -4,6 +4,7 @@ import { GIFT_SIZE } from '../../engine'
 import type { Action, Card, Suit } from '../../engine'
 import frameImage from '../assets/trumps/frame.webp'
 import { CardInspectContext } from '../cards/cardInspect'
+import { PapayouContext } from '../cards/papayouContext'
 import { trackTouches } from '../cards/touchPress'
 import { trumpArtImages } from '../cards/trumpArt'
 import { CardView } from '../components/CardView'
@@ -50,6 +51,11 @@ export function GameScreen({ controller, onQuit, admin, inviteLink }: Props) {
     [legalPlays, paused],
   )
   const names = useMemo(() => (session ? seatNames(session, me) : null), [session, me])
+  // Ce qu'il faut aux cartes pour reconnaître le papayou (la règle reste dans le moteur).
+  const papayouInfo = useMemo(
+    () => ({ papayouSuit: view.papayouSuit, playerCount: view.playerCount }),
+    [view.papayouSuit, view.playerCount],
+  )
   const [adminOpen, setAdminOpen] = useState(false)
   const [qrOpen, setQrOpen] = useState(false)
   /** Atout illustré affiché en grand dans le calque (null : aucun). */
@@ -209,7 +215,8 @@ export function GameScreen({ controller, onQuit, admin, inviteLink }: Props) {
   const hasEndPanel = view.phase === 'roundEnd' || view.phase === 'gameEnd'
 
   return (
-    <>
+    // Le papayou est reconnu partout dans l'écran, calque d'agrandissement compris (qui n'affiche que des atouts).
+    <PapayouContext.Provider value={papayouInfo}>
       <CardInspectContext.Provider value={setInspected}>
         <div className={`game${fan ? ' fan' : ''}${exchange ? ' exchange' : ''}`}>
           <div className="head">
@@ -314,7 +321,7 @@ export function GameScreen({ controller, onQuit, admin, inviteLink }: Props) {
           </div>
         </Lightbox>
       )}
-    </>
+    </PapayouContext.Provider>
   )
 }
 
