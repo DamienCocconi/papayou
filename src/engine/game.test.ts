@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { createDeck } from './cards'
 import { applyAction, createGame, handSize } from './game'
 import { legalPlays } from './rules'
+import { simulateGame } from './testing'
 import type { Card, GameState, Suit } from './types'
 
-const SIZES: Record<number, number> = { 3: 26, 4: 19, 5: 15, 6: 13 }
+const SIZES: Record<number, number> = { 3: 20, 4: 19, 5: 15, 6: 13 }
+
+const isFace = (card: Card): boolean => card.kind === 'suit' && card.rank >= 11
 
 function allCardIds(state: GameState): string[] {
   return [
@@ -42,9 +45,11 @@ describe('création de partie', () => {
     expect(new Set(ids).size).toBe(78)
   })
 
-  it('retire 0, 2, 3, 0 cartes « 1 » de couleur pour 3, 4, 5, 6 joueurs', () => {
-    const counts = [3, 4, 5, 6].map((n) => createGame(n, 5).removedCards.length)
-    expect(counts).toEqual([0, 2, 3, 0])
+  it('retire 2, 2, 3, 0 cartes « 1 » (18, 2, 3, 0 cartes au total) pour 3, 4, 5, 6 joueurs', () => {
+    const ones = (n: number): Card[] =>
+      createGame(n, 5).removedCards.filter((card) => card.kind === 'suit' && card.rank === 1)
+    expect([3, 4, 5, 6].map((n) => ones(n).length)).toEqual([2, 2, 3, 0])
+    expect([3, 4, 5, 6].map((n) => createGame(n, 5).removedCards.length)).toEqual([18, 2, 3, 0])
     for (const n of [4, 5]) {
       for (const card of createGame(n, 5).removedCards) {
         expect(card.kind === 'suit' && card.rank === 1).toBe(true)
@@ -52,9 +57,50 @@ describe('création de partie', () => {
     }
   })
 
+  it('à 3 joueurs, retire les 16 figures et 2 « 1 », et garde 60 cartes en jeu', () => {
+    for (let seed = 0; seed < 20; seed++) {
+      const s = createGame(3, seed)
+      const faces = s.removedCards.filter(isFace)
+      expect(faces).toHaveLength(16)
+      expect(new Set(faces.map((x) => x.id)).size).toBe(16)
+      const others = s.removedCards.filter((card) => !isFace(card))
+      expect(others).toHaveLength(2)
+      for (const card of others) expect(card.kind === 'suit' && card.rank === 1).toBe(true)
+      expect(s.hands.flat()).toHaveLength(60)
+    }
+  })
+
+  it("à 3 joueurs, aucune figure n'est distribuée, à aucune manche", () => {
+    for (const seed of [1, 2, 3]) {
+      simulateGame(3, seed, (state) => {
+        if (state.phase === 'exchange') {
+          expect(state.hands.flat().filter(isFace)).toEqual([])
+          expect(state.removedCards).toEqual(createGame(3, seed).removedCards)
+        }
+      })
+    }
+  })
+
+  it('à 3 joueurs, chaque manche compte 20 plis', () => {
+    for (const seed of [1, 2, 3]) {
+      let rounds = 0
+      simulateGame(3, seed, (state) => {
+        if (state.phase === 'roundEnd' || state.phase === 'gameEnd') {
+          expect(state.tricksPlayed).toBe(20)
+          if (state.phase === 'gameEnd') rounds = state.roundIndex + 1
+        }
+      })
+      expect(rounds).toBe(3)
+    }
+  })
+
+  it('aucune figure retirée à 4, 5 et 6 joueurs', () => {
+    for (const n of [4, 5, 6]) expect(createGame(n, 5).removedCards.filter(isFace)).toEqual([])
+  })
+
   it('le 7 de chaque couleur est toujours en jeu', () => {
     for (let seed = 0; seed < 20; seed++) {
-      for (const n of [4, 5]) {
+      for (const n of [3, 4, 5, 6]) {
         const ids = createGame(n, seed).hands.flat().map((x) => x.id)
         for (const suit of ['hearts', 'diamonds', 'clubs', 'spades']) expect(ids).toContain(`${suit}-7`)
       }
@@ -63,6 +109,27 @@ describe('création de partie', () => {
 
   it('refuse un nombre de joueurs invalide', () => {
     for (const n of [0, 2, 7, 3.5, -1]) expect(() => createGame(n, 1)).toThrow(RangeError)
+  })
+
+  // Valeurs relevées avant le change reduce-deck-three-players : à 4, 5 et 6 joueurs, le tirage est inchangé.
+  it.each([
+    [4, ['hearts-1', 'spades-1'], [
+      'hearts-6', 'hearts-7', 'hearts-13', 'diamonds-3', 'clubs-5', 'clubs-8', 'clubs-9', 'clubs-10',
+      'spades-3', 'spades-8', 'spades-14', 'trump-3', 'trump-7', 'trump-10', 'trump-11', 'trump-12',
+      'trump-15', 'trump-18', 'trump-21',
+    ]],
+    [5, ['hearts-1', 'spades-1', 'diamonds-1'], [
+      'hearts-6', 'hearts-13', 'diamonds-2', 'diamonds-4', 'diamonds-10', 'diamonds-13', 'clubs-5', 'clubs-9',
+      'clubs-10', 'spades-5', 'spades-14', 'trump-9', 'trump-10', 'trump-11', 'trump-16',
+    ]],
+    [6, [], [
+      'hearts-5', 'hearts-6', 'hearts-8', 'hearts-13', 'diamonds-5', 'diamonds-9', 'clubs-4', 'clubs-9',
+      'clubs-10', 'spades-4', 'trump-3', 'trump-11', 'trump-18',
+    ]],
+  ])("à %i joueurs, la graine 42 donne la même distribution qu'avant le paquet réduit", (n, removed, hand0) => {
+    const s = createGame(n, 42)
+    expect(s.removedCards.map((x) => x.id)).toEqual(removed)
+    expect((s.hands[0] as Card[]).map((x) => x.id)).toEqual(hand0)
   })
 
   it('est déterministe sous graine et varie avec la graine', () => {
@@ -125,7 +192,7 @@ describe('échange de cartes', () => {
       hands[0] = (hands[0] as Card[]).map((x) => (x.id === swap.id ? card : x))
       hand0.splice(0, hand0.length, ...(hands[0] as Card[]))
     }
-    expect(pool).toHaveLength(78)
+    expect(pool).toHaveLength(78 - s.removedCards.length)
     const forced: GameState = { ...s, hands }
     const r = applyAction(forced, { type: 'giveCards', seat: 0, cardIds: wanted })
     expect(r.ok).toBe(true)

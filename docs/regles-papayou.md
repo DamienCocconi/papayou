@@ -16,12 +16,14 @@ De 3 à 6 joueurs. Toutes les cartes sont distribuées, équitablement et au has
 
 | Joueurs | Cartes retirées | Cartes en jeu | Cartes par joueur |
 |---|---|---|---|
-| 3 | aucune | 78 | 26 |
+| 3 | les 16 figures (valet, cavalier, dame, roi) et 2 cartes « 1 » de couleur | 60 | 20 |
 | 4 | 2 cartes « 1 » de couleur | 76 | 19 |
 | 5 | 3 cartes « 1 » de couleur | 75 | 15 |
 | 6 | aucune | 78 | 13 |
 
-Les « 1 » retirés sont choisis au hasard **une seule fois, au début de la partie** (pas à chaque manche) et restent retirés pendant toute la partie. Leurs couleurs n'ont pas d'importance. On ne retire jamais que des « 1 » de couleur, donc le 7 de chaque couleur est toujours en jeu.
+À 3 joueurs, les couleurs ne vont donc que de 1 à 10 : les figures sont retirées pendant toute la partie, pour que les manches ne soient pas trop longues.
+
+Les « 1 » retirés sont choisis au hasard **une seule fois, au début de la partie** (pas à chaque manche) et restent retirés pendant toute la partie. Leurs couleurs n'ont pas d'importance. On ne retire jamais que des « 1 » de couleur et, à 3 joueurs, les figures : le 7 de chaque couleur est toujours en jeu.
 
 ## 3. Points
 
@@ -128,7 +130,7 @@ Dernier pli, A n'a plus que l'excuse. Il l'entame et remporte automatiquement le
 
 ## 8. Décisions validées
 
-1. **Tirage des « 1 » retirés** (4 et 5 joueurs) : une seule fois en début de partie.
+1. **Tirage des « 1 » retirés** (3, 4 et 5 joueurs) : une seule fois en début de partie. À 3 joueurs, les 16 figures sont aussi retirées pour toute la partie.
 2. **Excuse seul atout en main quand l'atout est demandé** : obligation de la jouer. Au dernier pli, elle ne gagne automatiquement que si elle entame ; sinon elle ne gagne pas.
 3. **Sens de l'échange et de l'ordre de jeu** : toujours le sens horaire (ordre dans un pli, don des 3 cartes, premier joueur de chaque manche).
 4. **L'atout est une cinquième couleur** : sans la couleur demandée, on joue n'importe quelle carte (pas d'obligation de couper). Un atout posé sur une couleur ne gagne jamais le pli ; les atouts ne gagnent que sur un pli entamé à l'atout.

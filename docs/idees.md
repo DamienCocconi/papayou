@@ -2,7 +2,7 @@
 
 Idées recueillies en testant le jeu, pas encore arbitrées. Ce fichier n'est pas la feuille de route : celle-ci (étapes décidées) est dans `contexte.md`. Une idée sort d'ici quand elle devient un changement OpenSpec (`/opsx:propose`), et on la raye alors avec le nom du change.
 
-Dernière mise à jour : 2026-11-07.
+Dernière mise à jour : 2026-11-15.
 
 ## Vue d'ensemble
 
@@ -15,7 +15,7 @@ Dernière mise à jour : 2026-11-07.
 | 5 | Scores en partie : manches passées, manche en cours, total | Fonction | `add-ui-scores-mobile` (déjà prévu) |
 | 6 | Indicateur de la couleur demandée | UX | Lisibilité de la table |
 | 7 | Lobby : nombre total de joueurs, bots en complément, récapitulatif | Fonction | Salle et accueil |
-| 8 | À 3 joueurs : cartes de 1 à 10 seulement | Règle | Variantes de jeu |
+| 8 | ~~À 3 joueurs : cartes de 1 à 10 seulement~~ | Règle | `reduce-deck-three-players` |
 | 9 | À 4 joueurs ou plus : le papayou est le 10 | Règle | Variantes de jeu |
 | 10 | Visuel distinct du papayou | UX | Lisibilité de la table |
 | 11 | Teintes trèfle et carreau, option par client | UX | Lisibilité de la table |
@@ -71,11 +71,11 @@ Quand un joueur rejoint et prend la place d'un bot pendant la phase d'échange d
 
 Ces deux points obligent à modifier `regles-papayou.md` (le contrat). Pas de modification sans accord explicite au moment du change.
 
-### 8. Trois joueurs : jeu réduit
+### ~~8. Trois joueurs : jeu réduit~~ → `reduce-deck-three-players`
 
-À 3 joueurs, les manches sont trop longues (26 cartes en main). On n'utilise plus que les cartes de **1 à 10** pour les couleurs (plus les atouts et l'excuse). Le papayou reste le 7.
+~~À 3 joueurs, les manches sont trop longues (26 cartes en main). On n'utilise plus que les cartes de **1 à 10** pour les couleurs (plus les atouts et l'excuse). Le papayou reste le 7.~~
 
-Question ouverte : ce jeu compte 62 cartes (4 × 10 + 21 + l'excuse), que 3 ne divise pas. Par analogie avec 4 joueurs, on retirerait 2 « 1 » de couleur pour arriver à 60, soit 20 cartes par joueur. À confirmer, ainsi que le fait que 20 cartes sont assez court (à 4 joueurs : 19). L'invariant des 390 points n'est pas touché, puisque le 7 reste en jeu.
+Tranché : les 16 figures et 2 « 1 » de couleur tirés au hasard sont retirés pour toute la partie, soit 60 cartes et 20 par joueur. Le papayou reste le 7.
 
 ### 9. Quatre joueurs ou plus : papayou = 10
 
