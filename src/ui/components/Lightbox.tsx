@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 
 interface Props {
-  /** Appelé au premier clic ou toucher n'importe où sur le calque, ou à la touche Échap. */
+  /** Appelé au premier clic ou toucher commencé sur le calque, n'importe où sur lui, ou à la touche Échap. */
   onClose: () => void
   /** Nom accessible du calque, lu par les lecteurs d'écran. */
   label: string
@@ -12,7 +12,7 @@ interface Props {
 
 /**
  * Calque plein écran, réutilisable pour tout contenu à montrer en grand (QR code d'invitation,
- * illustration d'un atout...) : fond assombri qui laisse voir l'écran de derrière, rendu inerte.
+ * atout agrandi...) : fond assombri qui laisse voir l'écran de derrière, rendu inerte.
  *
  * Ouvert = monté : c'est l'écran appelant qui décide de l'afficher. Rendu par portail dans `body`,
  * hors de `#root`, pour passer devant tout l'écran de jeu quels que soient ses `z-index`.
@@ -51,11 +51,30 @@ export function Lightbox({ onClose, label, children }: Props) {
     }
   }, [])
 
+  // Appui commencé sur le calque : seul celui-là peut le fermer. Le doigt d'un appui long, posé avant
+  // l'ouverture, ne le referme pas en se levant, même si le navigateur envoie un click au relâchement.
+  const pressed = useRef(false)
+
   // Fermeture au click, jamais au pointerdown : sinon le calque disparaîtrait sous le doigt
   // et le click qui suit tomberait sur l'écran de derrière. Le contenu ne bloque pas la propagation :
   // un clic sur lui ferme aussi.
   return createPortal(
-    <div ref={layer} className="lightbox" role="dialog" aria-modal="true" aria-label={label} tabIndex={-1} onClick={onClose}>
+    <div
+      ref={layer}
+      className="lightbox"
+      role="dialog"
+      aria-modal="true"
+      aria-label={label}
+      tabIndex={-1}
+      onPointerDown={() => {
+        pressed.current = true
+      }}
+      onClick={() => {
+        if (!pressed.current) return
+        pressed.current = false
+        onClose()
+      }}
+    >
       <div className="lightbox-content">{children}</div>
     </div>,
     document.body,

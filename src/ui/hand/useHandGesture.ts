@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useReducer, useRef } from 'react'
 import type { PointerEvent as ReactPointerEvent, RefObject, SyntheticEvent } from 'react'
+import { INSPECT_DELAY_MS } from '../cards/longPress'
 import { gestureViewKey, IDLE, reduceGesture } from './handGesture'
 import type { GestureContext, GestureEvent, GestureState } from './handGesture'
 
@@ -21,6 +22,8 @@ interface Options {
   onHeldMove: (x: number, y: number) => void
   /** Refus de l'hôte, qui arrive après l'envoi du coup : change à chaque refus (null : aucun). */
   remoteRefusal: number | null
+  /** Appui long au doigt sur la carte en emphase : l'écran l'agrandit s'il le peut. */
+  onInspect: (cardId: string) => void
 }
 
 export interface HandGesture {
@@ -58,11 +61,22 @@ export function useHandGesture(options: Options): HandGesture {
     latest.current = options
   })
 
+  // Minuteur de l'appui long, et élément qui a capturé le pointeur (pour le lui rendre à l'agrandissement).
+  const longPressTimer = useRef<number | null>(null)
+  const captured = useRef<{ element: HTMLElement; pointerId: number } | null>(null)
+  const stopLongPress = useCallback(() => {
+    if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current)
+    longPressTimer.current = null
+  }, [])
+  useEffect(() => stopLongPress, [stopLongPress])
+
   const send = useCallback((event: GestureEvent) => {
-    const { context, onRelease, onRefuse, onSelect, onHeldMove } = latest.current
+    const { context, onRelease, onRefuse, onSelect, onHeldMove, onInspect } = latest.current
     const before = stateRef.current
     const { state, effects } = reduceGesture(before, event, context)
     stateRef.current = state
+    // Hors du balayage (prise, relâchement, annulation), l'appui long n'a plus d'objet.
+    if (state.phase !== 'scrubbing') stopLongPress()
     if (state.phase === 'holding') onHeldMove(state.x, state.y)
     if (gestureViewKey(state) !== gestureViewKey(before)) forceRender()
     for (const effect of effects) {
@@ -77,9 +91,16 @@ export function useHandGesture(options: Options): HandGesture {
           // Refus immédiat (contrôleur local) ou carte placée : la carte n'attend pas.
           if (!onRelease(effect.cardId)) send({ type: 'settled' })
           break
+        case 'inspect': {
+          // Le doigt encore posé ne pilote plus la main : on rend le pointeur avant d'ouvrir le calque.
+          const capture = captured.current
+          if (capture?.element.hasPointerCapture(capture.pointerId)) capture.element.releasePointerCapture(capture.pointerId)
+          onInspect(effect.cardId)
+          break
+        }
       }
     }
-  }, [])
+  }, [stopLongPress])
 
   // La main a changé : la carte visée l'a peut-être quittée (coup confirmé, nouvelle manche...).
   const handKey = options.context.cardIds.join(',')
@@ -114,8 +135,19 @@ export function useHandGesture(options: Options): HandGesture {
       if (e.button !== 0) return
       send({ type: 'down', pointerId: e.pointerId, ...point(e), cardId: cardUnder(e), mouse: e.pointerType === 'mouse' })
       // Le pointeur reste suivi même s'il sort de la main ; le navigateur ne récupère pas le geste.
-      if (stateRef.current.phase === 'scrubbing' && stateRef.current.pointerId === e.pointerId) {
+      const state = stateRef.current
+      if (state.phase === 'scrubbing' && state.pointerId === e.pointerId) {
         e.currentTarget.setPointerCapture(e.pointerId)
+        captured.current = { element: e.currentTarget, pointerId: e.pointerId }
+        // Doigt posé sur la carte en emphase : le délai de l'appui long démarre (le réducteur juge à l'échéance).
+        if (state.pressed && !state.mouse) {
+          stopLongPress()
+          const pointerId = e.pointerId
+          longPressTimer.current = window.setTimeout(() => {
+            longPressTimer.current = null
+            send({ type: 'longPress', pointerId })
+          }, INSPECT_DELAY_MS)
+        }
       }
     },
     onPointerMove(e) {

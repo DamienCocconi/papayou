@@ -14,7 +14,17 @@ function centerOf(id: string): number {
 }
 
 function ctx(overrides: Partial<GestureContext> = {}): GestureContext {
-  return { cardIds: IDS, slots: SLOTS, cardSize: CARD_SIZE, lineY: LINE_Y, screenTop: -600, emphasizedId: null, canPlay: () => true, ...overrides }
+  return {
+    cardIds: IDS,
+    slots: SLOTS,
+    cardSize: CARD_SIZE,
+    lineY: LINE_Y,
+    screenTop: -600,
+    emphasizedId: null,
+    canPlay: () => true,
+    canInspect: () => true,
+    ...overrides,
+  }
 }
 
 /** Rejoue une suite d'événements et cumule les effets, comme le ferait le hook. */
@@ -411,6 +421,85 @@ describe('interruptions', () => {
   it('garde la prise si la main change sans perdre la carte', () => {
     const before = run(TAKE).state
     expect(run([{ type: 'handChanged' }], ctx(), before).state).toEqual(before)
+  })
+})
+
+describe('appui long sur la carte en emphase', () => {
+  /** Doigt posé directement sur la carte d, déjà en emphase. */
+  const press = (pointerId = P): GestureEvent => ({ type: 'down', pointerId, x: X, y: 40, cardId: 'd' })
+  const longPress = (pointerId = P): GestureEvent => ({ type: 'longPress', pointerId })
+  const kept = ctx({ emphasizedId: 'd' })
+  const inspections = (effects: GestureEffect[]) => effects.filter((e) => e.type === 'inspect')
+
+  it('agrandit la carte pressée et immobile, en la gardant en emphase', () => {
+    const { state, effects } = run([press(), longPress()], kept)
+    expect(state).toEqual(IDLE)
+    expect(effects).toEqual([
+      { type: 'select', cardId: 'd' },
+      { type: 'inspect', cardId: 'd' },
+    ])
+  })
+
+  it('tolère un léger tremblement du doigt', () => {
+    expect(inspections(run([press(), move(X + 5, 43), longPress()], kept).effects)).toEqual([{ type: 'inspect', cardId: 'd' }])
+  })
+
+  it('refuse après un déplacement au-delà de la tolérance, même revenu au point de départ', () => {
+    const away = run([press(), move(X + 15), longPress()], kept)
+    expect(inspections(away.effects)).toEqual([])
+    expect(away.state).toMatchObject({ phase: 'scrubbing', cardId: 'd', still: false })
+    expect(inspections(run([press(), move(X + 15), move(X), longPress()], kept).effects)).toEqual([])
+  })
+
+  it('laisse une carte non illustrée en emphase jouable après une hésitation', () => {
+    const plain = ctx({ emphasizedId: 'd', canInspect: () => false })
+    const waited = run([press(), longPress()], plain)
+    expect(waited.state).toMatchObject({ phase: 'scrubbing', cardId: 'd' })
+    expect(waited.effects).toEqual([])
+    const { state, effects } = run([press(), longPress(), move(X, 40 - PULL_THRESHOLD - 1), move(X, ABOVE), up()], plain)
+    expect(state).toMatchObject({ phase: 'pending', cardId: 'd' })
+    expect(releases(effects)).toEqual([{ type: 'release', cardId: 'd' }])
+  })
+
+  it('refuse une carte au repos devenue emphase pendant le même appui', () => {
+    const { effects } = run([down(centerOf('c')), move(X), longPress()])
+    expect(inspections(effects)).toEqual([])
+  })
+
+  it('refuse sur une carte au repos, touchée sans être en emphase', () => {
+    const { state, effects } = run([down(X), longPress()])
+    expect(inspections(effects)).toEqual([])
+    expect(state).toMatchObject({ phase: 'scrubbing', cardId: 'd' })
+  })
+
+  it('refuse sur une carte atteinte en balayant', () => {
+    expect(inspections(run([down(centerOf('b')), move(X), longPress()]).effects)).toEqual([])
+  })
+
+  it('refuse à la souris (le clic droit sert à agrandir)', () => {
+    const mousePress: GestureEvent = { type: 'down', pointerId: P, x: X, y: 40, cardId: 'd', mouse: true }
+    expect(inspections(run([mousePress, longPress()], kept).effects)).toEqual([])
+  })
+
+  it('refuse une carte déjà prise', () => {
+    const { state, effects } = run([press(), move(X, 40 - PULL_THRESHOLD - 1), longPress()], kept)
+    expect(state.phase).toBe('holding')
+    expect(inspections(effects)).toEqual([])
+  })
+
+  it('ignore le délai d’un autre doigt', () => {
+    const { state, effects } = run([press(), longPress(2)], kept)
+    expect(state.phase).toBe('scrubbing')
+    expect(inspections(effects)).toEqual([])
+  })
+
+  it('ne fait plus rien au relâchement qui suit', () => {
+    const { state, effects } = run([press(), longPress(), move(X, -300), up()], kept)
+    expect(state).toEqual(IDLE)
+    expect(effects).toEqual([
+      { type: 'select', cardId: 'd' },
+      { type: 'inspect', cardId: 'd' },
+    ])
   })
 })
 
