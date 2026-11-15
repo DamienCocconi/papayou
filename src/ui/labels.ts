@@ -1,4 +1,5 @@
 // Libellés d'affichage : noms des joueurs, symboles des couleurs, rangs. Aucune règle du jeu ici.
+import { papayouRank } from '../engine'
 import type { Card, PlayerView, Suit } from '../engine'
 import type { RoomErrorCode, SessionInfo } from '../net/protocol'
 import { TRUMP_ART, trumpArt, type TrumpArtTable } from './cards/trumpArt'
@@ -24,6 +25,14 @@ export function cardName(card: Card, artTable: TrumpArtTable = TRUMP_ART): strin
     case 'excuse':
       return 'Excuse'
   }
+}
+
+/**
+ * Carte papayou de la manche, en morceaux pour l'affichage : hauteur (« 7 » ou « 10 », fixée par le moteur),
+ * symbole et nom de la couleur.
+ */
+export function papayouLabel(suit: Suit, playerCount: number): { rank: string; symbol: string; name: string } {
+  return { rank: rankLabel(papayouRank(playerCount)), symbol: SUIT_SYMBOL[suit], name: SUIT_NAME[suit] }
 }
 
 /** Nom affiché d'une place ; `names` (partie en réseau) remplace les noms par défaut « Joueur N ». */

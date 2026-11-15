@@ -24,16 +24,30 @@ describe('bot heuristique : don et papayou', () => {
     expect(new Set(bot.chooseGift(view, createRng(1)))).toEqual(new Set(['excuse', 'trump-21', 'trump-12']))
   })
 
-  it('choisit un papayou dont il ne possède pas le 7', () => {
-    const hand = ['H7', 'S7', 'D2', 'C3'].map(c)
+  it('à 3 joueurs, choisit un papayou dont il ne possède pas le 7', () => {
+    const hand = ['H7', 'S7', 'D10', 'C10'].map(c)
+    const view = { ...getBotView(createGame(3, 1), 0), hand }
+    for (let seed = 1; seed <= 20; seed++) {
+      expect(['diamonds', 'clubs']).toContain(bot.choosePapayou(view, createRng(seed)))
+    }
+  })
+
+  it('à 3 joueurs, choisit une couleur quelconque quand il a les quatre 7', () => {
+    const hand = ['H7', 'S7', 'D7', 'C7'].map(c)
+    const view = { ...getBotView(createGame(3, 1), 0), hand }
+    expect(['hearts', 'diamonds', 'clubs', 'spades']).toContain(bot.choosePapayou(view, createRng(1)))
+  })
+
+  it('à 4 joueurs, choisit un papayou dont il ne possède pas le 10', () => {
+    const hand = ['H10', 'S10', 'D7', 'C7'].map(c)
     const view = { ...getBotView(createGame(4, 1), 0), hand }
     for (let seed = 1; seed <= 20; seed++) {
       expect(['diamonds', 'clubs']).toContain(bot.choosePapayou(view, createRng(seed)))
     }
   })
 
-  it('choisit une couleur quelconque quand il a les quatre 7', () => {
-    const hand = ['H7', 'S7', 'D7', 'C7'].map(c)
+  it('à 4 joueurs, choisit une couleur quelconque quand il a les quatre 10', () => {
+    const hand = ['H10', 'S10', 'D10', 'C10'].map(c)
     const view = { ...getBotView(createGame(4, 1), 0), hand }
     expect(['hearts', 'diamonds', 'clubs', 'spades']).toContain(bot.choosePapayou(view, createRng(1)))
   })

@@ -23,7 +23,7 @@ De 3 à 6 joueurs. Toutes les cartes sont distribuées, équitablement et au has
 
 À 3 joueurs, les couleurs ne vont donc que de 1 à 10 : les figures sont retirées pendant toute la partie, pour que les manches ne soient pas trop longues.
 
-Les « 1 » retirés sont choisis au hasard **une seule fois, au début de la partie** (pas à chaque manche) et restent retirés pendant toute la partie. Leurs couleurs n'ont pas d'importance. On ne retire jamais que des « 1 » de couleur et, à 3 joueurs, les figures : le 7 de chaque couleur est toujours en jeu.
+Les « 1 » retirés sont choisis au hasard **une seule fois, au début de la partie** (pas à chaque manche) et restent retirés pendant toute la partie. Leurs couleurs n'ont pas d'importance. On ne retire jamais que des « 1 » de couleur et, à 3 joueurs, les figures : le 7 et le 10 de chaque couleur sont toujours en jeu.
 
 ## 3. Points
 
@@ -34,7 +34,7 @@ Le but est de faire **le moins de points possible**. Seules ces cartes valent de
 | Excuse | 100 |
 | Atout 21 | 30 |
 | Atouts 1 à 20 | valeur faciale (1 à 20) |
-| **Papayou** (le 7 de la couleur choisie pour la manche) | 50 |
+| **Papayou** (dans la couleur choisie pour la manche : le 7 à 3 joueurs, le 10 à partir de 4 joueurs) | 50 |
 | Toutes les autres cartes de couleur | 0 |
 
 **Invariant :** chaque manche distribue exactement **390 points** (atouts 1 à 20 : 210, plus 30, plus 100, plus 50).
@@ -51,7 +51,7 @@ Le **joueur entameur** de la manche tourne d'un joueur à chaque manche, pour qu
 
 1. **Distribution** de la totalité du paquet.
 2. **Échange de 3 cartes** : chaque joueur choisit 3 cartes de sa main (n'importe lesquelles, excuse et atouts compris) et les donne au joueur qui joue après lui dans l'ordre de jeu. L'échange est **simultané** : on ne voit pas ce qu'on reçoit tant qu'on n'a pas choisi ce qu'on donne.
-3. **Choix du papayou** : le joueur entameur choisit la couleur du papayou. Il peut choisir une couleur dont il possède le 7.
+3. **Choix du papayou** : le joueur entameur choisit la couleur du papayou. Il peut choisir n'importe quelle couleur, y compris une dont il possède le papayou.
 4. **Premier pli** : le joueur entameur pose la première carte.
 5. **Plis suivants** : le gagnant d'un pli entame le suivant.
 6. On joue jusqu'à épuisement des mains. Il y a autant de plis que de cartes par joueur.
@@ -99,14 +99,14 @@ Pour désigner le gagnant, l'excuse vaut 0. Pour le décompte, elle vaut **100 p
 
 ## 6. Exemples de plis
 
-Papayou : 7 de cœur. 4 joueurs, A entame.
+Papayou : 10 de cœur. 4 joueurs, A entame.
 
 **Exemple 1 : la couleur gagne.**
 A : roi de pique, B : 3 de pique, C : dame de pique, D : 10 de pique.
 Le roi de pique est le plus haut de la couleur demandée. A gagne, le pli vaut 0 point.
 
 **Exemple 2 : l'atout posé sur une couleur ne gagne pas.**
-A : 7 de cœur (papayou), B : 2 de cœur, C : atout 8 (plus de cœur), D : roi de cœur.
+A : 10 de cœur (papayou), B : 2 de cœur, C : atout 8 (plus de cœur), D : roi de cœur.
 C n'a plus de cœur, il joue l'atout 8 pour s'en débarrasser, mais l'atout ne coupe pas. D gagne avec le roi de cœur. Le pli vaut 50 + 8 = 58 points pour D.
 
 **Exemple 3 : l'excuse perd sur un pli d'atout.**

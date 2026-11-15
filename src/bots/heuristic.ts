@@ -1,5 +1,5 @@
 // Bot heuristique : le but du jeu est de faire le moins de points possible, donc on évite de gagner les plis.
-import { cardPoints, createDeck, legalPlaysFromView, SUITS, trickWinner } from '../engine'
+import { cardPoints, createDeck, isPapayou, legalPlaysFromView, SUITS, trickWinner } from '../engine'
 import type { BotView, Card, Suit } from '../engine'
 import type { Bot } from './types'
 
@@ -51,14 +51,14 @@ function minBy<T>(items: readonly T[], key: (item: T) => number[]): T {
 function lead(view: BotView, legal: readonly Card[]): Card {
   const unseen = unseenCards(view)
   // Le plus de cartes plus fortes chez les autres = le plus de chances de perdre ; départage : moins de points, puis plus faible.
-  return minBy(legal, (card) => [-outstandingHigher(card, unseen), cardPoints(card, view.papayouSuit), order(card)])
+  return minBy(legal, (card) => [-outstandingHigher(card, unseen), cardPoints(card, view.papayouSuit, view.playerCount), order(card)])
 }
 
 function follow(view: BotView, legal: readonly Card[]): Card {
   const losing = legal.filter((card) => trickWinner([...view.trick, { seat: view.seat, card }]) !== view.seat)
   if (losing.length > 0) {
     // Je ne gagne pas : autant me débarrasser de la carte la plus chère (puis de la plus forte).
-    return minBy(losing, (card) => [-cardPoints(card, view.papayouSuit), -order(card)])
+    return minBy(losing, (card) => [-cardPoints(card, view.papayouSuit, view.playerCount), -order(card)])
   }
   // Toutes mes cartes gagnent le pli : je joue la plus faible.
   return minBy(legal, (card) => [order(card)])
@@ -68,14 +68,14 @@ export function createHeuristicBot(): Bot {
   return {
     chooseGift(view) {
       // Le papayou n'est pas encore connu : on donne les cartes qui valent le plus de points sans lui.
-      const ranked = [...view.hand].sort((a, b) => cardPoints(b, null) - cardPoints(a, null) || order(b) - order(a))
+      const points = (card: Card): number => cardPoints(card, null, view.playerCount)
+      const ranked = [...view.hand].sort((a, b) => points(b) - points(a) || order(b) - order(a))
       return ranked.slice(0, 3).map((c) => c.id)
     },
     choosePapayou(view, rng): Suit {
-      const withoutSeven = SUITS.filter(
-        (suit) => !view.hand.some((c) => c.kind === 'suit' && c.suit === suit && c.rank === 7),
-      )
-      const candidates = withoutSeven.length > 0 ? withoutSeven : SUITS
+      // Une couleur dont je n'ai pas le papayou (le 7 ou le 10 selon la table), sinon n'importe laquelle.
+      const notMine = SUITS.filter((suit) => !view.hand.some((c) => isPapayou(c, suit, view.playerCount)))
+      const candidates = notMine.length > 0 ? notMine : SUITS
       return candidates[rng.nextInt(candidates.length)] ?? 'hearts'
     },
     choosePlay(view) {

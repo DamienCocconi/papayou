@@ -22,11 +22,21 @@ describe('classement de compétition', () => {
 })
 
 describe('décompte', () => {
-  it('additionne les points des tas, papayou compris', () => {
+  it('additionne les points des tas, papayou (le 7) compris à 3 joueurs', () => {
     const scores = computeRoundScores(
-      [[c('X'), c('H7')], [c('T21'), c('S7')], [c('T5')]],
+      [[c('X'), c('H7')], [c('T21'), c('S7')], [c('T5'), c('H10')]],
       'hearts',
+      3,
     )
     expect(scores).toEqual([150, 30, 5])
+  })
+
+  it('additionne les points des tas, papayou (le 10) compris à 4 joueurs', () => {
+    const scores = computeRoundScores(
+      [[c('X'), c('H7')], [c('T21'), c('S10')], [c('T5'), c('H10')], []],
+      'hearts',
+      4,
+    )
+    expect(scores).toEqual([100, 30, 55, 0])
   })
 })

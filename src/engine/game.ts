@@ -157,7 +157,7 @@ function giveCards(state: GameState, seat: number, cardIds: readonly string[]): 
 
 /**
  * Choix de la couleur du papayou par l'entameur. Toute couleur est acceptée, que l'entameur
- * possède ou non le 7 (le 7 de chaque couleur est toujours en jeu).
+ * possède ou non le papayou (le 7 et le 10 de chaque couleur sont toujours en jeu).
  */
 function choosePapayou(state: GameState, seat: number, suit: string): ActionResult {
   if (state.phase !== 'choosePapayou') return fail('wrongPhase')
@@ -197,7 +197,7 @@ function finishTrick(state: GameState): GameState {
     leader: state.trickLeader,
     plays: state.trick,
     winner,
-    points: pilePoints(cards, state.papayouSuit),
+    points: pilePoints(cards, state.papayouSuit, state.playerCount),
   }
   const tricksPlayed = state.tricksPlayed + 1
   const next: GameState = { ...state, won, lastTrick, tricksPlayed, trick: [], trickLeader: winner }
@@ -207,7 +207,11 @@ function finishTrick(state: GameState): GameState {
 }
 
 function finishRound(state: GameState): GameState {
-  const scores = computeRoundScores(state.won, state.papayouSuit as NonNullable<GameState['papayouSuit']>)
+  const scores = computeRoundScores(
+    state.won,
+    state.papayouSuit as NonNullable<GameState['papayouSuit']>,
+    state.playerCount,
+  )
   const totals = state.totals.map((t, i) => t + (scores[i] as number))
   const roundScores = [...state.roundScores, scores]
   const last = state.roundIndex + 1 >= state.playerCount
@@ -222,5 +226,5 @@ function finishRound(state: GameState): GameState {
 
 /** Points d'une carte dans la manche en cours (utile à l'affichage). */
 export function pointsOf(state: GameState, card: Card): number {
-  return cardPoints(card, state.papayouSuit)
+  return cardPoints(card, state.papayouSuit, state.playerCount)
 }

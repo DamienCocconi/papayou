@@ -23,7 +23,7 @@ import { hasRoom, ids, isComplete } from '../hand/giftDraft'
 import { browserStorage, readLayout, writeLayout } from '../hand/layoutPreference'
 import type { HandLayout } from '../hand/layoutPreference'
 import { useGiftDraft } from '../hand/useGiftDraft'
-import { cardName, playerName, roomErrorText, seatNames, SUIT_NAME, SUIT_SYMBOL, turnSeat } from '../labels'
+import { cardName, papayouLabel, playerName, roomErrorText, seatNames, turnSeat } from '../labels'
 import { useGame } from '../useGame'
 
 interface Props {
@@ -217,12 +217,7 @@ export function GameScreen({ controller, onQuit, admin, inviteLink }: Props) {
               <span className="badge">
                 Manche {Math.min(view.roundIndex + 1, view.playerCount)} / {view.playerCount}
               </span>
-              {view.papayouSuit !== null && (
-                <span className="badge">
-                  Papayou : <strong>{SUIT_SYMBOL[view.papayouSuit]}</strong>
-                  <span className="suit-name"> {SUIT_NAME[view.papayouSuit]}</span>
-                </span>
-              )}
+              {view.papayouSuit !== null && <PapayouBadge suit={view.papayouSuit} playerCount={view.playerCount} />}
               <span className="topbar-actions">
                 {inviteLink !== undefined && (
                   <button
@@ -320,6 +315,20 @@ export function GameScreen({ controller, onQuit, admin, inviteLink }: Props) {
         </Lightbox>
       )}
     </>
+  )
+}
+
+/** Badge de la carte papayou de la manche (« 10 ♥ Cœur ») ; le nom de la couleur se masque sur écran étroit. */
+function PapayouBadge({ suit, playerCount }: { suit: Suit; playerCount: number }) {
+  const papayou = papayouLabel(suit, playerCount)
+  return (
+    <span className="badge">
+      Papayou :{' '}
+      <strong>
+        {papayou.rank} {papayou.symbol}
+      </strong>
+      <span className="suit-name"> {papayou.name}</span>
+    </span>
   )
 }
 

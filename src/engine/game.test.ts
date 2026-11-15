@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createDeck } from './cards'
+import { createDeck, isPapayou } from './cards'
 import { applyAction, createGame, handSize } from './game'
 import { legalPlays } from './rules'
 import { simulateGame } from './testing'
@@ -98,11 +98,14 @@ describe('création de partie', () => {
     for (const n of [4, 5, 6]) expect(createGame(n, 5).removedCards.filter(isFace)).toEqual([])
   })
 
-  it('le 7 de chaque couleur est toujours en jeu', () => {
+  it('le 7 et le 10 de chaque couleur sont toujours en jeu', () => {
     for (let seed = 0; seed < 20; seed++) {
       for (const n of [3, 4, 5, 6]) {
         const ids = createGame(n, seed).hands.flat().map((x) => x.id)
-        for (const suit of ['hearts', 'diamonds', 'clubs', 'spades']) expect(ids).toContain(`${suit}-7`)
+        for (const suit of ['hearts', 'diamonds', 'clubs', 'spades']) {
+          expect(ids).toContain(`${suit}-7`)
+          expect(ids).toContain(`${suit}-10`)
+        }
       }
     }
   })
@@ -239,17 +242,51 @@ describe('choix du papayou', () => {
     expect(s.trickLeader).toBe(afterExchange.roundLeader)
   })
 
-  it('l\'entameur peut choisir une couleur dont il n\'a pas le 7 (choix libre, décision validée)', () => {
+  it('l\'entameur peut choisir n\'importe quelle couleur, qu\'il possède le papayou ou non (choix libre)', () => {
     const suits: Suit[] = ['hearts', 'diamonds', 'clubs', 'spades']
     const leaderHand = afterExchange.hands[afterExchange.roundLeader] ?? []
-    const missing = suits.filter((suit) => !leaderHand.some((card) => card.kind === 'suit' && card.suit === suit && card.rank === 7))
-    // Avec 19 cartes sur 76, il est quasi certain qu'au moins un 7 manque ; la graine fixe rend ce test stable.
-    expect(missing.length).toBeGreaterThan(0)
-    for (const suit of missing) {
+    const owns = (suit: Suit): boolean => leaderHand.some((card) => isPapayou(card, suit, afterExchange.playerCount))
+    // Avec 19 cartes sur 76, il est quasi certain qu'au moins un 10 manque ; la graine fixe rend ce test stable.
+    expect(suits.some((suit) => !owns(suit))).toBe(true)
+    for (const suit of suits) {
       const s = mustApply(afterExchange, { type: 'choosePapayou', seat: afterExchange.roundLeader, suit })
       expect(s.phase).toBe('playing')
       expect(s.papayouSuit).toBe(suit)
     }
+  })
+
+  it('l\'entameur peut choisir une couleur dont il possède le papayou', () => {
+    const leaderHand = afterExchange.hands[afterExchange.roundLeader] ?? []
+    const owned = leaderHand.find((card) => card.kind === 'suit' && card.rank === 10)
+    if (owned === undefined || owned.kind !== 'suit') throw new Error('la graine doit donner un 10 à l\'entameur')
+    const s = mustApply(afterExchange, { type: 'choosePapayou', seat: afterExchange.roundLeader, suit: owned.suit })
+    expect(s.phase).toBe('playing')
+    expect(isPapayou(owned, s.papayouSuit, s.playerCount)).toBe(true)
+  })
+
+  it('à 4 joueurs, les 50 points du papayou reviennent au joueur qui a ramassé le 10', () => {
+    // Décompte indépendant du moteur : excuse 100, atout 21 à 30, atouts faciaux, 10 du papayou 50.
+    const expected = (pile: readonly Card[], suit: Suit): number =>
+      pile.reduce((sum, card) => {
+        if (card.kind === 'excuse') return sum + 100
+        if (card.kind === 'trump') return sum + (card.value === 21 ? 30 : card.value)
+        return sum + (card.suit === suit && card.rank === 10 ? 50 : 0)
+      }, 0)
+    let checked = 0
+    let previous: GameState | null = null
+    simulateGame(4, 21, (state) => {
+      if (previous !== null && state.roundScores.length > previous.roundScores.length) {
+        const suit = state.papayouSuit as Suit
+        const scores = state.roundScores[state.roundScores.length - 1] as number[]
+        const holder = state.won.findIndex((pile) => pile.some((x) => x.id === `${suit}-10`))
+        expect(holder).toBeGreaterThanOrEqual(0)
+        state.won.forEach((pile, seat) => expect(scores[seat]).toBe(expected(pile, suit)))
+        expect(scores.reduce((a, b) => a + b, 0)).toBe(390)
+        checked++
+      }
+      previous = state
+    })
+    expect(checked).toBe(4)
   })
 
   it('un autre joueur est refusé', () => {

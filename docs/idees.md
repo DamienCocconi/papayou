@@ -16,7 +16,7 @@ Dernière mise à jour : 2026-11-15.
 | 6 | Indicateur de la couleur demandée | UX | Lisibilité de la table |
 | 7 | Lobby : nombre total de joueurs, bots en complément, récapitulatif | Fonction | Salle et accueil |
 | 8 | ~~À 3 joueurs : cartes de 1 à 10 seulement~~ | Règle | `reduce-deck-three-players` |
-| 9 | À 4 joueurs ou plus : le papayou est le 10 | Règle | Variantes de jeu |
+| 9 | ~~À 4 joueurs ou plus : le papayou est le 10~~ | Règle | `papayou-ten` |
 | 10 | Visuel distinct du papayou | UX | Lisibilité de la table |
 | 11 | Teintes trèfle et carreau, option par client | UX | Lisibilité de la table |
 | 12 | Délai avant le pli suivant | UX | Rythme du pli |
@@ -77,13 +77,11 @@ Ces deux points obligent à modifier `regles-papayou.md` (le contrat). Pas de mo
 
 Tranché : les 16 figures et 2 « 1 » de couleur tirés au hasard sont retirés pour toute la partie, soit 60 cartes et 20 par joueur. Le papayou reste le 7.
 
-### 9. Quatre joueurs ou plus : papayou = 10
+### ~~9. Quatre joueurs ou plus : papayou = 10~~ → `papayou-ten`
 
-Quand les figures sont jouées (à partir de 4 joueurs), le papayou est le **10** de la couleur choisie, et non le 7. À 3 joueurs, il reste le 7.
+~~Quand les figures sont jouées (à partir de 4 joueurs), le papayou est le **10** de la couleur choisie, et non le 7. À 3 joueurs, il reste le 7.~~
 
-Question ouverte : la section 4 des règles dit « Il peut choisir une couleur dont il possède le 7 ». Est-ce « seulement une couleur dont il a la carte » ou « n'importe laquelle » ? Il faut trancher, et la réponse vaudra pour le 10.
-
-Impacts à prévoir quand ce sera un change : moteur, bots, libellés de l'interface, exemples de `regles-papayou.md`. Le plus simple serait une table « variante par nombre de joueurs » unique dans le moteur.
+Tranché : la question ouverte sur le choix de couleur est résolue, l'entameur peut choisir n'importe quelle couleur, y compris une dont il possède le papayou. La table « variante par nombre de joueurs » unique n'a pas été faite : ce serait un refactoring séparé.
 
 ## Lisibilité de la table
 
@@ -93,7 +91,11 @@ Dans un pli, dès que la première carte est posée, afficher un indicateur de l
 
 ### 10. Papayou reconnaissable
 
-Une fois la couleur du papayou choisie, la carte papayou (le 7 ou le 10 selon le nombre de joueurs) doit avoir un visuel un peu différent, pour ne pas être confondue avec le 7 ou le 10 d'une autre couleur. Dépend des points 8 et 9 pour savoir quelle carte.
+Une fois la couleur du papayou choisie, la carte papayou (le 7 ou le 10 selon le nombre de joueurs) doit avoir un visuel un peu différent, pour ne pas être confondue avec le 7 ou le 10 d'une autre couleur. Les points 8 et 9 sont livrés : le moteur fournit `isPapayou(card, papayouSuit, playerCount)` pour reconnaître la carte, sans que l'interface code la règle.
+
+Pistes retenues en exploration (à confirmer dans le change) : un effet d'escarbilles avec tsParticles, partout où la carte est affichée, préchargé à l'entrée de l'écran de jeu, actif en permanence. Le code est organisé en catalogue de styles, pour pouvoir plus tard modifier l'effet ou en proposer plusieurs.
+
+Pour plus tard : choisir le style d'animation du papayou dans les options, et respecter le réglage « réduire les animations » du téléphone (`prefers-reduced-motion`).
 
 ### 11. Couleurs plus lisibles, option par client
 

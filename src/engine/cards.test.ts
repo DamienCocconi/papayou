@@ -5,6 +5,8 @@ import {
   cardPoints,
   compareCards,
   createDeck,
+  isPapayou,
+  papayouRank,
   pilePoints,
   sortHand,
   suitCard,
@@ -38,20 +40,54 @@ describe('paquet', () => {
 
 describe('points', () => {
   it('excuse 100, atout 21 à 30, atouts 1-20 faciaux', () => {
-    expect(cardPoints(EXCUSE, null)).toBe(100)
-    expect(cardPoints(trumpCard(21), null)).toBe(30)
-    for (let v = 1; v <= 20; v++) expect(cardPoints(trumpCard(v), null)).toBe(v)
+    for (const n of [3, 4]) {
+      expect(cardPoints(EXCUSE, null, n)).toBe(100)
+      expect(cardPoints(trumpCard(21), null, n)).toBe(30)
+      for (let v = 1; v <= 20; v++) expect(cardPoints(trumpCard(v), null, n)).toBe(v)
+    }
   })
 
-  it('le papayou (7 de la couleur choisie) vaut 50, les autres cartes de couleur 0', () => {
-    expect(cardPoints(suitCard('hearts', 7), 'hearts')).toBe(50)
-    expect(cardPoints(suitCard('hearts', 7), 'spades')).toBe(0)
-    expect(cardPoints(suitCard('hearts', 7), null)).toBe(0)
-    expect(cardPoints(suitCard('hearts', 14), 'hearts')).toBe(0)
+  it('hauteur du papayou : le 7 à 3 joueurs, le 10 à 4, 5 et 6 joueurs', () => {
+    expect(papayouRank(3)).toBe(7)
+    for (const n of [4, 5, 6]) expect(papayouRank(n)).toBe(10)
   })
 
-  it('le paquet complet vaut 390 points quelle que soit la couleur du papayou', () => {
-    for (const suit of SUITS) expect(pilePoints(createDeck(), suit)).toBe(390)
+  it('à 3 joueurs, le 7 de la couleur choisie vaut 50 et le 10 vaut 0', () => {
+    expect(cardPoints(suitCard('hearts', 7), 'hearts', 3)).toBe(50)
+    expect(cardPoints(suitCard('hearts', 10), 'hearts', 3)).toBe(0)
+  })
+
+  it('à 4, 5 et 6 joueurs, le 10 de la couleur choisie vaut 50 et le 7 vaut 0', () => {
+    for (const n of [4, 5, 6]) {
+      expect(cardPoints(suitCard('hearts', 10), 'hearts', n)).toBe(50)
+      expect(cardPoints(suitCard('hearts', 7), 'hearts', n)).toBe(0)
+      expect(cardPoints(suitCard('hearts', 14), 'hearts', n)).toBe(0)
+    }
+  })
+
+  it('le 7 et le 10 des autres couleurs valent 0', () => {
+    for (const n of [3, 4, 5, 6]) {
+      for (const rank of [7, 10]) {
+        expect(cardPoints(suitCard('hearts', rank), 'spades', n)).toBe(0)
+        expect(cardPoints(suitCard('hearts', rank), null, n)).toBe(0)
+      }
+    }
+  })
+
+  it("isPapayou est faux tant que la couleur n'est pas choisie", () => {
+    expect(isPapayou(suitCard('hearts', 7), null, 3)).toBe(false)
+    expect(isPapayou(suitCard('hearts', 10), null, 4)).toBe(false)
+    expect(isPapayou(suitCard('hearts', 7), 'hearts', 3)).toBe(true)
+    expect(isPapayou(suitCard('hearts', 10), 'hearts', 4)).toBe(true)
+    expect(isPapayou(trumpCard(10), 'hearts', 4)).toBe(false)
+  })
+
+  it('les cartes en jeu valent 390 points pour chaque nombre de joueurs et chaque couleur du papayou', () => {
+    for (const n of [3, 4, 5, 6]) {
+      // À 3 joueurs, les figures sont retirées ; les « 1 » retirés ne valent rien, on les garde ici.
+      const inPlay = createDeck().filter((c) => n !== 3 || c.kind !== 'suit' || c.rank <= 10)
+      for (const suit of SUITS) expect(pilePoints(inPlay, suit, n)).toBe(390)
+    }
   })
 })
 

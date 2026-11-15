@@ -90,7 +90,7 @@ Le système SHALL, en phase d'échange, laisser l'humain choisir exactement troi
 - **THEN** l'interface indique l'attente et qui a déjà donné, et ne permet plus de changer son don
 
 ### Requirement: Choix du papayou
-Le système SHALL, quand l'humain est l'entameur, lui proposer les quatre couleurs et enregistrer son choix. Quand un autre joueur est l'entameur, l'interface SHALL indiquer qui choisit. Une fois le papayou choisi, sa couleur SHALL rester visible pendant la manche.
+Le système SHALL, quand l'humain est l'entameur, lui proposer les quatre couleurs et enregistrer son choix. Quand un autre joueur est l'entameur, l'interface SHALL indiquer qui choisit. Une fois le papayou choisi, la carte papayou de la manche, hauteur et couleur (par exemple « 10 de cœur »), SHALL rester visible pendant la manche, telle que le moteur la désigne.
 
 #### Scenario: L'humain choisit
 - **WHEN** l'humain est l'entameur et clique sur la couleur trèfle
@@ -98,7 +98,15 @@ Le système SHALL, quand l'humain est l'entameur, lui proposer les quatre couleu
 
 #### Scenario: Un bot choisit
 - **WHEN** un bot est l'entameur
-- **THEN** l'interface indique que ce joueur choisit, puis affiche la couleur choisie
+- **THEN** l'interface indique que ce joueur choisit, puis affiche la carte papayou choisie
+
+#### Scenario: Papayou affiché à trois joueurs
+- **WHEN** le papayou d'une manche à 3 joueurs est le trèfle
+- **THEN** l'interface affiche le 7 de trèfle comme papayou
+
+#### Scenario: Papayou affiché à partir de quatre joueurs
+- **WHEN** le papayou d'une manche à 4 joueurs est le trèfle
+- **THEN** l'interface affiche le 10 de trèfle comme papayou
 
 ### Requirement: Table et pli en cours
 Le système SHALL afficher tous les joueurs autour de la table avec leur nom, leur nombre de cartes en main, leur place dans l'ordre de jeu, la carte qu'ils ont posée dans le pli en cours et le joueur dont c'est le tour. Le gagnant et les points du dernier pli terminé SHALL rester visibles. Ses cartes SHALL être visibles en étalé et s'afficher à la demande en éventail.
