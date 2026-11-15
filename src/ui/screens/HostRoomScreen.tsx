@@ -6,6 +6,8 @@ import type { BotKind } from '../../net/scheduler'
 import { createHostSession } from '../../net/session-host'
 import type { HostSession, LobbySnapshot } from '../../net/session-host'
 import { openRoomWithFreshCode } from '../../net/transport'
+import { InviteQr } from '../components/InviteQr'
+import { Lightbox } from '../components/Lightbox'
 import { createHostController } from '../controller/host'
 import { GameScreen } from './GameScreen'
 
@@ -72,13 +74,22 @@ function HostRoom({ session, onQuit }: { session: HostSession; onQuit: () => voi
     }),
     [session],
   )
-  if (snapshot.stage === 'lobby') return <HostLobby session={session} lobby={snapshot} onQuit={onQuit} />
-  return <GameScreen controller={controller} onQuit={onQuit} admin={admin} />
+  // Le même lien sert au lobby et, pendant la partie, au bouton QR code de la barre du haut.
+  const link = useMemo(() => buildInviteLink(window.location.href, session.code), [session])
+  if (snapshot.stage === 'lobby') return <HostLobby session={session} lobby={snapshot} link={link} onQuit={onQuit} />
+  return <GameScreen controller={controller} onQuit={onQuit} admin={admin} inviteLink={link} />
 }
 
-function HostLobby({ session, lobby, onQuit }: { session: HostSession; lobby: LobbySnapshot; onQuit: () => void }) {
+interface HostLobbyProps {
+  session: HostSession
+  lobby: LobbySnapshot
+  link: string
+  onQuit: () => void
+}
+
+function HostLobby({ session, lobby, link, onQuit }: HostLobbyProps) {
   const [copied, setCopied] = useState(false)
-  const link = buildInviteLink(window.location.href, lobby.code)
+  const [qrOpen, setQrOpen] = useState(false)
   const total = lobby.players.length + lobby.botCount
 
   async function copyLink() {
@@ -106,6 +117,14 @@ function HostLobby({ session, lobby, onQuit }: { session: HostSession; lobby: Lo
       <button type="button" className="btn secondary" onClick={copyLink}>
         {copied ? 'Lien copié' : 'Copier le lien'}
       </button>
+      <button type="button" className="btn secondary" onClick={() => setQrOpen(true)}>
+        Afficher le QR code
+      </button>
+      {qrOpen && (
+        <Lightbox label="QR code d'invitation" onClose={() => setQrOpen(false)}>
+          <InviteQr link={link} />
+        </Lightbox>
+      )}
 
       <h2>Joueurs présents</h2>
       <ul>
