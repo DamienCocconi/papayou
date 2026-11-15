@@ -3,8 +3,12 @@ import { pilePoints } from './cards'
 import type { Card, Suit } from './types'
 
 /** Points de chaque joueur pour une manche, à partir des tas de plis gagnés. */
-export function computeRoundScores(won: readonly (readonly Card[])[], papayouSuit: Suit): number[] {
-  return won.map((pile) => pilePoints(pile, papayouSuit))
+export function computeRoundScores(
+  won: readonly (readonly Card[])[],
+  papayouSuit: Suit,
+  playerCount: number,
+): number[] {
+  return won.map((pile) => pilePoints(pile, papayouSuit, playerCount))
 }
 
 /**

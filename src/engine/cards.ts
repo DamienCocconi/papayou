@@ -28,20 +28,30 @@ export function createDeck(): Card[] {
   return deck
 }
 
-/** Points d'une carte. Le papayou est le 7 de la couleur choisie pour la manche. */
-export function cardPoints(card: Card, papayouSuit: Suit | null): number {
+/** Hauteur du papayou : le 7 à 3 joueurs (couleurs de 1 à 10), le 10 à partir de 4 joueurs (figures jouées). */
+export function papayouRank(playerCount: number): number {
+  return playerCount <= 3 ? 7 : 10
+}
+
+/** Vrai si la carte est le papayou de la manche. Faux tant que la couleur n'est pas choisie. */
+export function isPapayou(card: Card, papayouSuit: Suit | null, playerCount: number): boolean {
+  return card.kind === 'suit' && card.suit === papayouSuit && card.rank === papayouRank(playerCount)
+}
+
+/** Points d'une carte. Le papayou dépend de la couleur choisie et du nombre de joueurs. */
+export function cardPoints(card: Card, papayouSuit: Suit | null, playerCount: number): number {
   switch (card.kind) {
     case 'excuse':
       return 100
     case 'trump':
       return card.value === 21 ? 30 : card.value
     case 'suit':
-      return card.rank === 7 && card.suit === papayouSuit ? 50 : 0
+      return isPapayou(card, papayouSuit, playerCount) ? 50 : 0
   }
 }
 
-export function pilePoints(cards: readonly Card[], papayouSuit: Suit | null): number {
-  return cards.reduce((sum, c) => sum + cardPoints(c, papayouSuit), 0)
+export function pilePoints(cards: readonly Card[], papayouSuit: Suit | null, playerCount: number): number {
+  return cards.reduce((sum, c) => sum + cardPoints(c, papayouSuit, playerCount), 0)
 }
 
 /** Vrai pour les atouts numérotés et pour l'excuse (qui compte comme atout). */
