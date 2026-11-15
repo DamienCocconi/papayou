@@ -42,7 +42,7 @@ Le système SHALL accepter de 3 à 6 joueurs et retirer, une seule fois au débu
 
 #### Scenario: Le papayou toujours en jeu
 - **WHEN** une partie est créée, quel que soit le nombre de joueurs
-- **THEN** le 7 de chaque couleur est en jeu
+- **THEN** le 7 et le 10 de chaque couleur sont en jeu
 
 #### Scenario: Retrait conservé entre les manches
 - **WHEN** une nouvelle manche commence dans une partie à 3, 4 ou 5 joueurs
@@ -68,11 +68,23 @@ Le système SHALL, au début de chaque manche, mélanger les cartes en jeu et le
 - **THEN** elles produisent les mêmes distributions
 
 ### Requirement: Valeur en points des cartes
-Le système SHALL attribuer les points suivants : excuse 100, atout 21 à 30, atouts 1 à 20 à leur valeur faciale, papayou (le 7 de la couleur choisie pour la manche) 50, toutes les autres cartes de couleur 0.
+Le système SHALL attribuer les points suivants : excuse 100, atout 21 à 30, atouts 1 à 20 à leur valeur faciale, papayou 50, toutes les autres cartes de couleur 0. Le papayou SHALL être, dans la couleur choisie pour la manche, le 7 à 3 joueurs et le 10 à partir de 4 joueurs.
 
 #### Scenario: Total d'une manche
 - **WHEN** on additionne la valeur de toutes les cartes d'une manche
 - **THEN** le total vaut 390, quel que soit le nombre de joueurs et la couleur du papayou
+
+#### Scenario: Papayou à trois joueurs
+- **WHEN** une manche à 3 joueurs a le cœur pour couleur du papayou
+- **THEN** le 7 de cœur vaut 50 points et le 10 de cœur vaut 0
+
+#### Scenario: Papayou à partir de quatre joueurs
+- **WHEN** une manche à 4, 5 ou 6 joueurs a le cœur pour couleur du papayou
+- **THEN** le 10 de cœur vaut 50 points et le 7 de cœur vaut 0
+
+#### Scenario: Hors de la couleur du papayou
+- **WHEN** une manche a le cœur pour couleur du papayou
+- **THEN** le 7 et le 10 des autres couleurs valent 0
 
 ### Requirement: Échange de cartes
 Le système SHALL, après la distribution, faire donner à chaque joueur 3 cartes de son choix (excuse et atouts compris) au joueur suivant dans le sens horaire. L'échange SHALL être simultané : un joueur ne reçoit ses nouvelles cartes qu'une fois que tous les joueurs ont choisi les leurs.
@@ -94,11 +106,15 @@ Le système SHALL, après la distribution, faire donner à chaque joueur 3 carte
 - **THEN** l'action est refusée
 
 ### Requirement: Choix du papayou
-Le système SHALL faire choisir au joueur entameur de la manche, après l'échange, la couleur du papayou. Le 7 de cette couleur SHALL valoir 50 points pour cette manche. L'entameur peut choisir une couleur dont il possède le 7.
+Le système SHALL faire choisir au joueur entameur de la manche, après l'échange, la couleur du papayou. La carte papayou de cette couleur (le 7 à 3 joueurs, le 10 à partir de 4 joueurs) SHALL valoir 50 points pour cette manche. L'entameur SHALL pouvoir choisir n'importe quelle couleur, y compris une dont il possède le papayou.
 
 #### Scenario: Choix valide
 - **WHEN** l'entameur choisit une couleur
-- **THEN** le 7 de cette couleur est le papayou et la phase de jeu commence
+- **THEN** la carte papayou de cette couleur est le papayou et la phase de jeu commence
+
+#### Scenario: Papayou dans la main de l'entameur
+- **WHEN** l'entameur choisit une couleur dont il possède la carte papayou
+- **THEN** le choix est accepté
 
 #### Scenario: Choix par un autre joueur
 - **WHEN** un joueur autre que l'entameur tente de choisir la couleur
